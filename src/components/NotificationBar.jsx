@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockClassroom } from '../data/mockData';
 import Notification from './ui/Notification';
 
-const NotificationBar = () => {
+// Accepts optional customNotifications prop; falls back to mockClassroom.notifications
+const NotificationBar = ({ customNotifications }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [dismissed, setDismissed] = useState([]);
 
-    const notifications = mockClassroom.notifications || [];
-    const activeNotifications = notifications.filter(n => !dismissed.includes(n.id));
+    const source = customNotifications ?? (mockClassroom.notifications || []);
+    const activeNotifications = source.filter(n => !dismissed.includes(n.id));
 
     if (activeNotifications.length === 0) return null;
 
@@ -55,8 +56,7 @@ const NotificationBar = () => {
                             {activeNotifications.map((_, idx) => (
                                 <div
                                     key={idx}
-                                    className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-white w-6' : 'bg-white bg-opacity-50'
-                                        }`}
+                                    className={`h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-white w-6' : 'bg-white bg-opacity-50 w-2'}`}
                                 />
                             ))}
                         </div>

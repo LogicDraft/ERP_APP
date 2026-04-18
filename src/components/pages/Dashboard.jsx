@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Calendar, GraduationCap, ArrowRight, UserCheck, Contact } from 'lucide-react';
+import { Users, Calendar, GraduationCap, UserCheck, Contact } from 'lucide-react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { mockClassroom } from '../../data/mockData';
 import { Card } from '../ui/Card';
@@ -18,7 +18,7 @@ const Dashboard = () => {
     const today = days[todayIndex];
     const todaysClasses = timetable[today] || [];
 
-    // Request Notification Permissions on Mount
+    // ── 1. Request permissions on mount ──────────────────────────────────────
     useEffect(() => {
         const requestPermissions = async () => {
             try {
@@ -27,124 +27,141 @@ const Dashboard = () => {
                     await LocalNotifications.requestPermissions();
                 }
             } catch (error) {
-                console.error("Error requesting notification permissions:", error);
+                console.error('Error requesting notification permissions:', error);
             }
         };
         requestPermissions();
     }, []);
 
-    // Smart Notification Logic
+    // ── 2. Schedule native push notifications for Programming in C days ───────
     useEffect(() => {
-        const checkNotifications = async () => {
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const currentDay = days[now.getDay()];
+        const scheduleLaptopNotifications = async () => {
+            try {
+                const permStatus = await LocalNotifications.checkPermissions();
+                if (permStatus.display !== 'granted') return;
 
-            // Helper to parse start time to 24h format (handling '01:40' as PM)
-            const getStartHour = (timeStr) => {
-                if (!timeStr) return 0;
-                const startTime = timeStr.split('-')[0].trim();
-                let [h] = startTime.split(':').map(Number);
-                // Assumption: Classes starting 01-06 are PM, 07-12 are AM (except 12 which is PM, handled naturally)
-                if (h >= 1 && h <= 6) h += 12;
-                return h;
-            };
-
-            let notification = null;
-            let startSchedule = false;
-
-            // Morning Logic: Active from 8:00 AM to 12:00 PM
-            if (currentHour >= 8 && currentHour < 12) {
-                const hasMorningLaptop = timetable[currentDay]?.some(cls => {
-                    const h = getStartHour(cls.time);
-                    const isLaptop = cls.isLaptop || cls.subject.toLowerCase().includes('python programming');
-                    return isLaptop && h < 12.5;
+                // Cancel previous laptop notifications before re-scheduling
+                await LocalNotifications.cancel({
+                    notifications: [{ id: 2001 }, { id: 2002 }]
                 });
 
-                if (hasMorningLaptop) {
-                    notification = {
-                        id: 1001, // Numeric ID for Capacitor
-                        title: 'Morning Laptop Session!',
-                        body: 'You have a class before lunch that requires a laptop. Please ensure you have it with you.',
-                        schedule: { at: new Date(Date.now() + 1000) } // Schedule for 1s later
-                    };
-                    startSchedule = true;
-                }
-            }
-            // Afternoon Logic: Active from 1:15 PM onwards
-            else if ((currentHour === 13 && currentMinute >= 15) || (currentHour > 13 && currentHour < 17)) {
-                const hasAfternoonLaptop = timetable[currentDay]?.some(cls => {
-                    const h = getStartHour(cls.time);
-                    const isLaptop = cls.isLaptop || cls.subject.toLowerCase().includes('python programming');
-                    return isLaptop && h >= 12.5;
-                });
+                const todaySchedule = timetable[today] || [];
 
-                if (hasAfternoonLaptop) {
-                    notification = {
-                        id: 1002, // Numeric ID for Capacitor
-                        title: 'Afternoon Laptop Session!',
-                        body: 'You have a post-lunch session starting soon that requires a laptop.',
-                        schedule: { at: new Date(Date.now() + 1000) }
-                    };
-                    startSchedule = true;
-                }
-            }
+                const hasCTheory = todaySchedule.some(
+                    cls => cls.requiresLaptop && cls.subject === 'Programming in C'
+                );
+                const hasCLab = todaySchedule.some(
+                    cls => cls.requiresLaptop && cls.subject === 'Programming in C (Lab)'
+                );
 
-            // Update React State for UI
-            if (notification) {
-                setSmartNotification({
-                    id: notification.id,
-                    title: notification.title,
-                    message: notification.body,
-                    type: 'warning',
-                    priority: 'high',
-                    icon: 'laptop'
-                });
+                const notifList = [];
 
-                // Request Permissions and Schedule Native Notification
-                try {
-                    const permStatus = await LocalNotifications.requestPermissions();
-                    if (permStatus.display === 'granted') {
-                        // Check if we already scheduled recently to avoid spam loop check
-                        // For now, we schedule. In production, use LocalNotifications.getPending()
-                        await LocalNotifications.schedule({
-                            notifications: [{
-                                title: notification.title,
-                                body: notification.body,
-                                id: notification.id,
-                                schedule: { at: new Date(Date.now() + 1000) },
-                                sound: null,
-                                attachments: null,
-                                actionTypeId: "",
-                                extra: null
-                            }]
-                        });
-                    }
-                } catch (e) {
-                    console.error("Error scheduling notification", e);
+                if (hasCTheory) {
+                    // 8:00 AM reminder for Programming in C (theory)
+                    const at8am = new Date();
+                    at8am.setHours(8, 0, 0, 0);
+                    notifList.push({
+                        title: '💻 Bring Your Laptop!',
+                        body: "Programming in C class today — don't forget your laptop!",
+                        id: 2001,
+                        schedule: {
+                            at: at8am.getTime() > Date.now() ? at8am : new Date(Date.now() + 1000)
+                        },
+                        sound: null,
+                        attachments: null,
+                        actionTypeId: '',
+                        extra: null
+                    });
                 }
-            } else {
-                setSmartNotification(null);
+
+                if (hasCLab) {
+                    // 1:20 PM reminder for Programming in C (Lab)
+                    const at1_20pm = new Date();
+                    at1_20pm.setHours(13, 20, 0, 0);
+                    notifList.push({
+                        title: '💻 C Lab at 1:40 PM!',
+                        body: 'Programming in C (Lab) starts soon. Bring your laptop by 1:20 PM!',
+                        id: 2002,
+                        schedule: {
+                            at: at1_20pm.getTime() > Date.now() ? at1_20pm : new Date(Date.now() + 1500)
+                        },
+                        sound: null,
+                        attachments: null,
+                        actionTypeId: '',
+                        extra: null
+                    });
+                }
+
+                if (notifList.length > 0) {
+                    await LocalNotifications.schedule({ notifications: notifList });
+                }
+            } catch (e) {
+                console.error('Error scheduling laptop notifications', e);
             }
         };
 
-        checkNotifications();
-        // Check every minute
-        const interval = setInterval(checkNotifications, 60000);
-        return () => clearInterval(interval);
-    }, [timetable]);
+        scheduleLaptopNotifications();
+    }, [timetable, today]);
 
-    // Helper to check if a subject is a break
+    // ── 3. In-app smart notification banner logic ─────────────────────────────
+    useEffect(() => {
+        const checkNotifications = () => {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const todaySchedule = timetable[today] || [];
+
+            const hasCTheory = todaySchedule.some(
+                cls => cls.requiresLaptop && cls.subject === 'Programming in C'
+            );
+            const hasCLab = todaySchedule.some(
+                cls => cls.requiresLaptop && cls.subject === 'Programming in C (Lab)'
+            );
+
+            let notification = null;
+
+            // Show from 8:00 AM if there is a C theory class today
+            if (hasCTheory && currentHour >= 8 && currentHour < 18) {
+                notification = {
+                    id: 2001,
+                    title: '💻 Bring Your Laptop Today!',
+                    message: 'Programming in C class is scheduled today — please bring your laptop.',
+                    type: 'warning',
+                    priority: 'high',
+                    icon: 'laptop'
+                };
+            }
+
+            // Override with lab reminder from 1:20 PM
+            if (hasCLab && (currentHour > 13 || (currentHour === 13 && currentMinute >= 20))) {
+                notification = {
+                    id: 2002,
+                    title: '💻 C Lab Starting Soon!',
+                    message: 'Programming in C (Lab) is at 1:40 PM today. Bring your laptop now!',
+                    type: 'warning',
+                    priority: 'high',
+                    icon: 'laptop'
+                };
+            }
+
+            setSmartNotification(notification);
+        };
+
+        checkNotifications();
+        const interval = setInterval(checkNotifications, 30000); // re-check every 30 s
+        return () => clearInterval(interval);
+    }, [timetable, today]);
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
     const isBreak = (subject) => {
         const upper = subject.toUpperCase();
         return upper.includes('BREAK') || upper.includes('LUNCH');
     };
 
-    // Filter out breaks for class count
     const actualClasses = todaysClasses.filter(slot => !isBreak(slot.subject));
     const classCount = actualClasses.length;
 
+    // ── Navigation cards ──────────────────────────────────────────────────────
     const cards = [
         {
             title: 'Mentor Allocation',
@@ -188,27 +205,29 @@ const Dashboard = () => {
         },
     ];
 
-    // Inject smart notification if exists
+    // ── Build notification list for the in-app bar ────────────────────────────
+    const todaySchedule = timetable[today] || [];
+    const staticNotifications = (mockClassroom.notifications || []).filter(n => {
+        if (n.id === 1) return todaySchedule.some(c => c.requiresLaptop && c.subject === 'Programming in C');
+        if (n.id === 2) return todaySchedule.some(c => c.requiresLaptop && c.subject === 'Programming in C (Lab)');
+        return true;
+    });
+
     const displayNotifications = smartNotification
-        ? [smartNotification, ...(mockClassroom.notifications || [])]
-        : mockClassroom.notifications;
+        ? [smartNotification, ...staticNotifications.filter(n => n.id !== smartNotification.id)]
+        : staticNotifications;
 
-    // Temporarily override mockData notifications for the NotificationBar
-    const notificationsWithSmart = {
-        ...mockClassroom,
-        notifications: displayNotifications
-    };
-
+    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="space-y-8 animate-fadeIn">
-            {/* Header Section */}
+            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 animate-gradient">
                         Welcome AIML ERP
                     </h1>
                     <p className="text-slate-600 font-semibold mt-2 text-base">
-                        First Semester BE • Section N
+                        Second Semester BE • Section N
                     </p>
                 </div>
                 <div className="bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 flex items-center gap-2">
@@ -217,7 +236,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Top Row: Info Card & Today's Summary */}
+            {/* Top Row: Info Card & Classes Today */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <InfoCard
@@ -236,8 +255,8 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Middle Section: Notification Bar (Only show if Python/AI class exists) */}
-            {smartNotification && (
+            {/* Notification Bar — laptop alerts */}
+            {displayNotifications.length > 0 && (
                 <div className="w-full animate-slideUp">
                     <NotificationBar customNotifications={displayNotifications} />
                 </div>
@@ -245,7 +264,6 @@ const Dashboard = () => {
 
             {/* Bottom Row: Schedule & Reminders */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Today's Schedule */}
                 <div className="lg:col-span-2">
                     <Card className="h-full bg-white border border-slate-100 shadow-lg rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-6">
@@ -257,7 +275,10 @@ const Dashboard = () => {
                         {todaysClasses.length > 0 ? (
                             <div className="space-y-4">
                                 {todaysClasses.map((cls, idx) => (
-                                    <div key={idx} className="group flex items-center p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all">
+                                    <div
+                                        key={idx}
+                                        className="group flex items-center p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all"
+                                    >
                                         <div className="w-24 text-sm font-bold text-slate-500 border-r-2 border-slate-200 pr-4 mr-4 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-colors">
                                             {cls.time}
                                         </div>
@@ -265,7 +286,7 @@ const Dashboard = () => {
                                             <div className="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
                                                 {cls.subject}
                                             </div>
-                                            {(cls.isLaptop || cls.subject.toLowerCase().includes('python')) && (
+                                            {cls.requiresLaptop && (
                                                 <span className="inline-block mt-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md font-medium">
                                                     💻 Laptop Required
                                                 </span>
@@ -282,22 +303,22 @@ const Dashboard = () => {
                     </Card>
                 </div>
 
-                {/* Reminder Widget */}
                 <div className="lg:col-span-1">
                     <ReminderWidget />
                 </div>
             </div>
+
             <h2 className="text-xl font-bold text-slate-800 mb-6">Quick Access</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {cards.map((card) => {
                     const Icon = card.icon;
                     return (
                         <Link key={card.path} to={card.path} className="group">
-                            <div className={`h-full relative overflow-hidden rounded-2xl p-1 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br ${card.gradient} p-[1px]`}>
+                            <div className={`h-full relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br ${card.gradient} p-[1px]`}>
                                 <div className="absolute inset-0 bg-white/90 backdrop-blur-xl rounded-2xl z-0"></div>
                                 <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 text-center">
-                                    <div className={`mb-3 p-3 rounded-full bg-opacity-10 ${card.color.replace('bg-', 'bg-opacity-10 text-')} group-hover:scale-110 transition-transform duration-300`}>
-                                        <Icon size={32} strokeWidth={1.5} className={`${card.color.replace('bg-', 'text-')}`} />
+                                    <div className={`mb-3 p-3 rounded-full ${card.color.replace('bg-', 'bg-opacity-10 text-')} group-hover:scale-110 transition-transform duration-300`}>
+                                        <Icon size={32} strokeWidth={1.5} className={card.color.replace('bg-', 'text-')} />
                                     </div>
                                     <h3 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
                                         {card.title}
@@ -312,7 +333,6 @@ const Dashboard = () => {
                 })}
             </div>
         </div>
-
     );
 };
 

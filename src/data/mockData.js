@@ -621,7 +621,7 @@ export const mockClassroom = {
             { subject: "Numerical Methods", code: "1BMATS201", time: "09:40-10:35" },
             { subject: "SHORT BREAK", time: "10:35-10:50" },
             { subject: "Quantum Physics and Applications", code: "1BPHYS202", time: "10:50-11:45" },
-            { subject: "Programming in C", code: "1BPOPL207", time: "11:45-12:40" },
+            { subject: "Programming in C", code: "1BPOPL207", time: "11:45-12:40", requiresLaptop: true },
             { subject: "LUNCH BREAK", time: "12:40-01:40" },
             { subject: "Interdisciplinary Project-Based Learning", code: "1BPRJ258", time: "01:40-02:35" },
             { subject: "Interdisciplinary Project-Based Learning", code: "1BPRJ258", time: "02:35-03:30" },
@@ -630,11 +630,11 @@ export const mockClassroom = {
             { subject: "Intro to Electronics & Communication Engineering", code: "1BESC204C", time: "08:45-09:40" },
             { subject: "Quantum Physics and Applications", code: "1BPHYS202", time: "09:40-10:35" },
             { subject: "SHORT BREAK", time: "10:35-10:50" },
-            { subject: "Programming in C", code: "1BPOPL207", time: "10:50-11:45" },
+            { subject: "Programming in C", code: "1BPOPL207", time: "10:50-11:45", requiresLaptop: true },
             { subject: "Numerical Methods", code: "1BMATS201", time: "11:45-12:40" },
             { subject: "LUNCH BREAK", time: "12:40-01:40" },
-            { subject: "Programming in C (Lab)", code: "1BPOPL207", time: "01:40-02:35" },
-            { subject: "Programming in C (Lab)", code: "1BPOPL207", time: "02:35-03:30" },
+            { subject: "Programming in C (Lab)", code: "1BPOPL207", time: "01:40-02:35", requiresLaptop: true },
+            { subject: "Programming in C (Lab)", code: "1BPOPL207", time: "02:35-03:30", requiresLaptop: true },
         ],
         friday: [
             { subject: "Soft Skills", code: "1BSKS206", time: "08:45-09:40" },
@@ -644,12 +644,32 @@ export const mockClassroom = {
             { subject: "Numerical Methods", code: "1BMATS201", time: "11:45-12:40" },
             { subject: "LUNCH BREAK", time: "12:40-01:40" },
             { subject: "Quantum Physics and Applications", code: "1BPHYS202", time: "01:40-02:35" },
-            { subject: "Programming in C", code: "1BPOPL207", time: "02:35-03:30" },
+            { subject: "Programming in C", code: "1BPOPL207", time: "02:35-03:30", requiresLaptop: true },
             { subject: "Samskrutika Kannada / Balake Kannada", code: "1BKSK209/1BKBK209", time: "03:30-04:25" },
         ],
         saturday: [],
         sunday: []
     },
+    notifications: [
+        {
+            id: 1,
+            title: "💻 Bring Your Laptop Today!",
+            message: "Programming in C class is scheduled today. Please bring your laptop to class.",
+            type: "warning",
+            priority: "high",
+            date: null,
+            icon: "laptop"
+        },
+        {
+            id: 2,
+            title: "💻 C Lab Session at 1:20 PM!",
+            message: "Programming in C (Lab) is scheduled today at 1:40 PM. Bring your laptop by 1:20 PM.",
+            type: "warning",
+            priority: "high",
+            date: null,
+            icon: "laptop"
+        }
+    ],
     facultyContactInfo: {
         "Numerical Methods": {
             name: "Dr. Riyaz Ur Rehman A",
