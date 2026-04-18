@@ -1,9 +1,6 @@
 # AIML Class ERP - Android App
 
 <div align="center">
-
-![Acharya Logo](acharya_logo.png)
-
 **A mobile-ready Android application for AIML Class Management**
 
 [![React](https://img.shields.io/badge/React-19.2.0-blue.svg)](https://reactjs.org/)
