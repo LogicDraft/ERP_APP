@@ -650,26 +650,6 @@ export const mockClassroom = {
         saturday: [],
         sunday: []
     },
-    notifications: [
-        {
-            id: 1,
-            title: "Welcome to AIML Portal - Semester 2",
-            message: "Your Second Semester (Physics Cycle 2025-26) timetable is now live. Check your updated schedule.",
-            type: "info",
-            priority: "normal",
-            date: "2026-02-01",
-            icon: "info"
-        },
-        {
-            id: 2,
-            title: "CADD Lab Sessions",
-            message: "CADD Lab runs on Tuesday for3 consecutive periods (01:40 PM – 04:25 PM). Please be prepared.",
-            type: "warning",
-            priority: "high",
-            date: "2026-01-01",
-            icon: "laptop"
-        }
-    ],
     facultyContactInfo: {
         "Numerical Methods": {
             name: "Dr. Riyaz Ur Rehman A",
