@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AIML Class ERP</string>
+    <string name="title_activity_main">AIML Class ERP</string>
+    <string name="package_name">com.acharya.aiml.erp</string>
+    <string name="custom_url_scheme">com.acharya.aiml.erp</string>
+</resources>
