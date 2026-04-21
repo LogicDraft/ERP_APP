@@ -9,6 +9,8 @@ import TimeTable from './components/pages/TimeTable';
 import Profile from './components/pages/Profile';
 import Faculty from './components/pages/Faculty';
 import Attendance from './components/pages/Attendance';
+import { mockClassroom } from './data/mockData';
+import { initializeNotificationSystem, syncNativeAttendanceToLocalStorage } from './services/erpNotifications';
 
 import { App as CapacitorApp } from '@capacitor/app';
 
@@ -23,6 +25,23 @@ const ProtectedRoute = ({ children }) => {
       navigate('/login');
     }
   }, [isLoggedIn, navigate]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    const initNotifications = async () => {
+      try {
+        await initializeNotificationSystem(mockClassroom.timetable, mockClassroom.notifications || []);
+        await syncNativeAttendanceToLocalStorage();
+      } catch (error) {
+        console.error('Notification initialization failed:', error);
+      }
+    };
+
+    initNotifications();
+  }, [isLoggedIn]);
 
   // Handle Android Back Button
   const locationRef = React.useRef(location);

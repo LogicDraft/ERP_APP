@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock, Plus, Settings, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { mockClassroom } from '../../data/mockData';
+import { syncNativeAttendanceToLocalStorage } from '../../services/erpNotifications';
 
 const ATTENDANCE_STORAGE_KEY = 'self_attendance_records_v2';
 const ATTENDANCE_TARGETS_KEY = 'self_attendance_targets_v1';
@@ -69,23 +70,29 @@ const Attendance = () => {
     );
 
     useEffect(() => {
-        const savedRecords = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
-        if (savedRecords) {
-            try {
-                setAttendanceRecords(JSON.parse(savedRecords));
-            } catch {
-                setAttendanceRecords({});
-            }
-        }
+        const loadAttendanceData = async () => {
+            await syncNativeAttendanceToLocalStorage();
 
-        const savedTargets = localStorage.getItem(ATTENDANCE_TARGETS_KEY);
-        if (savedTargets) {
-            try {
-                setSubjectTargets(JSON.parse(savedTargets));
-            } catch {
-                setSubjectTargets({});
+            const savedRecords = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
+            if (savedRecords) {
+                try {
+                    setAttendanceRecords(JSON.parse(savedRecords));
+                } catch {
+                    setAttendanceRecords({});
+                }
             }
-        }
+
+            const savedTargets = localStorage.getItem(ATTENDANCE_TARGETS_KEY);
+            if (savedTargets) {
+                try {
+                    setSubjectTargets(JSON.parse(savedTargets));
+                } catch {
+                    setSubjectTargets({});
+                }
+            }
+        };
+
+        loadAttendanceData();
     }, []);
 
     const markAttendance = (slot, status) => {
@@ -282,9 +289,9 @@ const Attendance = () => {
         const targetValue = getTargetForSubject(selectedSubject.key);
 
         return (
-            <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 -my-6 bg-black text-slate-100 animate-fadeIn font-sans">
-                <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
-                    <div className="flex items-center justify-between mb-6">
+            <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 bg-black text-slate-100 animate-fadeIn font-sans">
+            <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pt-5 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))]">
+                        <div className="flex items-center justify-between mb-5">
                         <button
                             type="button"
                             onClick={() => {
@@ -296,7 +303,7 @@ const Attendance = () => {
                         >
                             <ArrowLeft className="w-7 h-7" />
                         </button>
-                        <h1 className="text-2xl font-extrabold text-slate-200 truncate px-2">{selectedSubject.name}</h1>
+                        <h1 className="text-[clamp(2.1rem,6vw,2.8rem)] leading-tight font-extrabold text-slate-200 truncate px-2">{selectedSubject.name}</h1>
                         <button
                             type="button"
                             onClick={() => setIsTargetSheetOpen(true)}
@@ -307,16 +314,16 @@ const Attendance = () => {
                         </button>
                     </div>
 
-                    <div className="mb-4">
-                        <h2 className="text-5xl sm:text-4xl font-light text-slate-200">{monthCalendar.title.replace(' ', ', ')}</h2>
+                    <div className="mb-5">
+                        <h2 className="text-[clamp(2.4rem,8vw,3.2rem)] leading-tight font-light text-slate-200">{monthCalendar.title.replace(' ', ', ')}</h2>
                     </div>
 
-                    <div className="h-px bg-slate-700 mb-5"></div>
+                    <div className="h-px bg-slate-700 mb-6"></div>
 
-                    <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-6">
+                    <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-7">
                         <div className="grid grid-cols-7 gap-2 mb-3">
                             {dayLabels.map((label) => (
-                                <div key={label} className="text-center text-[#d4a6d9] font-medium text-lg">
+                                <div key={label} className="text-center text-[#d4a6d9] font-medium text-[1.85rem] sm:text-lg">
                                     {label}
                                 </div>
                             ))}
@@ -327,7 +334,7 @@ const Attendance = () => {
                                 <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-2">
                                     {week.map((cell, dayIndex) => {
                                         if (!cell) {
-                                            return <div key={`empty-${weekIndex}-${dayIndex}`} className="h-11"></div>;
+                                            return <div key={`empty-${weekIndex}-${dayIndex}`} className="h-12"></div>;
                                         }
 
                                         const markerClass =
@@ -338,8 +345,8 @@ const Attendance = () => {
                                                     : 'text-slate-300';
 
                                         return (
-                                            <div key={`day-${weekIndex}-${dayIndex}`} className="h-11 flex items-center justify-center">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${markerClass}`}>
+                                            <div key={`day-${weekIndex}-${dayIndex}`} className="h-12 flex items-center justify-center">
+                                                <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xl sm:text-lg ${markerClass}`}>
                                                     {cell.day}
                                                 </div>
                                             </div>
@@ -350,12 +357,12 @@ const Attendance = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-3 mb-6">
-                        <button type="button" className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-xl font-medium flex items-center justify-center gap-3">
+                    <div className="space-y-3 mb-7">
+                        <button type="button" className="w-full h-[4.9rem] rounded-full bg-[#a8bfff] text-[#0b3678] text-[2rem] sm:text-xl font-medium flex items-center justify-center gap-3">
                             Attendance overview
                             <ChevronRight className="w-7 h-7" />
                         </button>
-                        <button type="button" className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-xl font-medium flex items-center justify-center gap-3">
+                        <button type="button" className="w-full h-[4.9rem] rounded-full bg-[#a8bfff] text-[#0b3678] text-[2rem] sm:text-xl font-medium flex items-center justify-center gap-3">
                             Monthly Attendance
                             <ChevronRight className="w-7 h-7" />
                         </button>
@@ -403,7 +410,7 @@ const Attendance = () => {
 
                     <div className="bg-[#171a23] rounded-3xl p-6 border border-slate-800 flex items-start gap-3">
                         <div className="w-9 h-9 mt-1 rounded-full bg-[#222739] text-[#a8bfff] flex items-center justify-center text-lg">!</div>
-                        <p className="text-2xl sm:text-xl text-slate-300 leading-relaxed">{insight.text}</p>
+                        <p className="text-[2rem] sm:text-xl text-slate-300 leading-relaxed">{insight.text}</p>
                     </div>
                 </div>
 
@@ -414,10 +421,10 @@ const Attendance = () => {
                             onClick={(event) => event.stopPropagation()}
                         >
                             <div className="w-14 h-1.5 bg-slate-400 rounded-full mx-auto mb-5"></div>
-                            <h3 className="text-5xl sm:text-4xl font-bold text-slate-200 mb-3">Set Attendance Target</h3>
-                            <p className="text-slate-400 text-2xl sm:text-base mb-8">Choose the minimum attendance percentage you want to maintain for this subject.</p>
+                            <h3 className="text-[clamp(2.2rem,7vw,3rem)] leading-tight font-bold text-slate-200 mb-3">Set Attendance Target</h3>
+                            <p className="text-slate-400 text-[1.75rem] sm:text-base mb-8">Choose the minimum attendance percentage you want to maintain for this subject.</p>
 
-                            <div className="text-center text-6xl sm:text-5xl font-extrabold text-[#a8bfff] mb-6">{targetValue}%</div>
+                            <div className="text-center text-[4.4rem] sm:text-5xl font-extrabold text-[#a8bfff] mb-6">{targetValue}%</div>
 
                             <input
                                 type="range"
@@ -428,7 +435,7 @@ const Attendance = () => {
                                 className="w-full accent-[#a8bfff] h-2"
                             />
 
-                            <div className="flex justify-between text-slate-400 text-lg sm:text-sm mt-2 mb-7">
+                            <div className="flex justify-between text-slate-400 text-[1.45rem] sm:text-sm mt-2 mb-7">
                                 <span>0%</span>
                                 <span>100%</span>
                             </div>
@@ -436,7 +443,7 @@ const Attendance = () => {
                             <button
                                 type="button"
                                 onClick={() => setIsTargetSheetOpen(false)}
-                                className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-4xl sm:text-2xl font-bold"
+                                className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-[2.4rem] sm:text-2xl font-bold"
                             >
                                 Save
                             </button>
@@ -448,11 +455,11 @@ const Attendance = () => {
     }
 
     return (
-        <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 -my-6 bg-black text-slate-100 animate-fadeIn font-sans">
-            <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
-                <div className="flex items-start justify-between mb-6">
+        <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 bg-black text-slate-100 animate-fadeIn font-sans">
+            <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pt-5 pb-[calc(10rem+env(safe-area-inset-bottom,0px))]">
+                <div className="flex items-start justify-between mb-7">
                     <div>
-                        <h1 className="text-5xl sm:text-4xl font-extrabold tracking-tight text-slate-200">Self Attendance</h1>
+                        <h1 className="text-[clamp(3.2rem,10vw,4.5rem)] leading-none font-extrabold tracking-tight text-slate-200">Self Attendance</h1>
                     </div>
                     <button
                         type="button"
@@ -464,22 +471,22 @@ const Attendance = () => {
                     </button>
                 </div>
 
-                <div className="bg-[#171a23] rounded-[2rem] p-6 border border-slate-800 mb-6">
-                    <h2 className="text-5xl sm:text-3xl font-bold text-slate-200 mb-6">Subject Performance</h2>
+                <div className="bg-[#171a23] rounded-[2rem] p-6 border border-slate-800 mb-7">
+                    <h2 className="text-[clamp(2.2rem,7vw,3rem)] leading-tight font-bold text-slate-200 mb-6">Subject Performance</h2>
                     <div className="flex gap-4 items-end h-72 overflow-x-auto pb-2">
                         {chartData.map((subject, idx) => (
                             <div key={idx} className="flex flex-col items-center gap-2 min-w-[6rem] flex-1">
-                                <span className="text-5xl sm:text-3xl font-bold text-[#a8bfff]">{subject.percentage}%</span>
+                                <span className="text-[2.55rem] sm:text-3xl font-bold text-[#a8bfff]">{subject.percentage}%</span>
                                 <div className="w-full bg-[#2a2f3a] rounded-3xl h-48 flex items-end overflow-hidden">
                                     <div className="w-full rounded-3xl transition-all duration-700 bg-[#9fb3e5]" style={{ height: `${Math.max(10, subject.percentage)}%` }}></div>
                                 </div>
-                                <span className="text-xl sm:text-sm font-medium text-slate-400 truncate w-full text-center">{subject.shortName}</span>
+                                <span className="text-[1.7rem] sm:text-sm font-medium text-slate-400 truncate w-full text-center">{subject.shortName}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 pb-2">
                     {uniqueSubjects.map((subject) => {
                         const insight = getInsight(subject);
                         return (
@@ -494,14 +501,14 @@ const Attendance = () => {
                             >
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="min-w-0">
-                                        <h3 className="text-2xl sm:text-xl font-bold text-slate-200 truncate">{subject.name}</h3>
-                                        <p className="text-slate-500 text-sm mt-1">Code: {subject.code}</p>
-                                        <p className="text-[#a8bfff] text-sm mt-1 flex items-center gap-2">
+                                        <h3 className="text-[2.55rem] sm:text-xl leading-tight font-bold text-slate-200 truncate">{subject.name}</h3>
+                                        <p className="text-slate-500 text-[1.75rem] sm:text-sm mt-1">Code: {subject.code}</p>
+                                        <p className="text-[#a8bfff] text-[1.7rem] sm:text-sm mt-1 flex items-center gap-2">
                                             <Clock className="w-4 h-4" />
                                             {getNextClass(subject.name, subject.code)}
                                         </p>
                                     </div>
-                                    <div className="w-14 h-14 rounded-full border-4 border-[#3b445a] text-[#a8bfff] flex items-center justify-center font-bold text-xl sm:text-sm shrink-0">
+                                    <div className="w-16 h-16 rounded-full border-4 border-[#3b445a] text-[#a8bfff] flex items-center justify-center font-bold text-[1.55rem] sm:text-sm shrink-0">
                                         {insight.percentage}%
                                     </div>
                                 </div>
@@ -510,7 +517,7 @@ const Attendance = () => {
                     })}
                 </div>
 
-                <div className="fixed left-4 right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-20 mx-auto max-w-2xl">
+                <div className="fixed left-4 right-4 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-20 mx-auto max-w-2xl">
                     <button
                         type="button"
                         onClick={() => navigate('/timetable')}

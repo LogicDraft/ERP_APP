@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Calendar, GraduationCap, UserCheck, Contact } from 'lucide-react';
-import { LocalNotifications } from '@capacitor/local-notifications';
 import { mockClassroom } from '../../data/mockData';
 import { Card } from '../ui/Card';
 import NotificationBar from '../NotificationBar';
@@ -25,92 +24,7 @@ const Dashboard = () => {
     const today = days[todayIndex];
     const todaysClasses = timetable[today] || [];
 
-    // ── 1. Request permissions on mount ──────────────────────────────────────
-    useEffect(() => {
-        const requestPermissions = async () => {
-            try {
-                const permStatus = await LocalNotifications.checkPermissions();
-                if (permStatus.display !== 'granted') {
-                    await LocalNotifications.requestPermissions();
-                }
-            } catch (error) {
-                console.error('Error requesting notification permissions:', error);
-            }
-        };
-        requestPermissions();
-    }, []);
-
-    // ── 2. Schedule native push notifications for Programming in C days ───────
-    useEffect(() => {
-        const scheduleLaptopNotifications = async () => {
-            try {
-                const permStatus = await LocalNotifications.checkPermissions();
-                if (permStatus.display !== 'granted') return;
-
-                // Cancel previous laptop notifications before re-scheduling
-                await LocalNotifications.cancel({
-                    notifications: [{ id: 2001 }, { id: 2002 }]
-                });
-
-                const todaySchedule = timetable[today] || [];
-
-                const hasCTheory = todaySchedule.some(
-                    cls => cls.requiresLaptop && cls.subject === 'Programming in C'
-                );
-                const hasCLab = todaySchedule.some(
-                    cls => cls.requiresLaptop && cls.subject === 'Programming in C (Lab)'
-                );
-
-                const notifList = [];
-
-                if (hasCTheory) {
-                    // 8:00 AM reminder for Programming in C (theory)
-                    const at8am = new Date();
-                    at8am.setHours(8, 0, 0, 0);
-                    notifList.push({
-                        title: '💻 Bring Your Laptop!',
-                        body: "Programming in C class today — don't forget your laptop!",
-                        id: 2001,
-                        schedule: {
-                            at: at8am.getTime() > Date.now() ? at8am : new Date(Date.now() + 1000)
-                        },
-                        sound: null,
-                        attachments: null,
-                        actionTypeId: '',
-                        extra: null
-                    });
-                }
-
-                if (hasCLab) {
-                    // 1:40 PM reminder for Programming in C (Lab)
-                    const at1_40pm = new Date();
-                    at1_40pm.setHours(13, 40, 0, 0);
-                    notifList.push({
-                        title: '💻 C Lab at 1:40 PM!',
-                        body: 'Programming in C (Lab) starts soon. Bring your laptop by 1:40 PM!',
-                        id: 2002,
-                        schedule: {
-                            at: at1_40pm.getTime() > Date.now() ? at1_40pm : new Date(Date.now() + 1500)
-                        },
-                        sound: null,
-                        attachments: null,
-                        actionTypeId: '',
-                        extra: null
-                    });
-                }
-
-                if (notifList.length > 0) {
-                    await LocalNotifications.schedule({ notifications: notifList });
-                }
-            } catch (e) {
-                console.error('Error scheduling laptop notifications', e);
-            }
-        };
-
-        scheduleLaptopNotifications();
-    }, [timetable, today]);
-
-    // ── 3. In-app smart notification banner logic ─────────────────────────────
+    // ── In-app smart notification banner logic ─────────────────────────────
     useEffect(() => {
         const checkNotifications = () => {
             const now = new Date();
