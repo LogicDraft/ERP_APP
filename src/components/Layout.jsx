@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Home, Users, Calendar, GraduationCap, UserCheck, Contact, User, Menu, X, ChevronRight } from 'lucide-react';
-import { openAttendance } from '../native/attendanceLauncher';
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -29,7 +28,7 @@ const Layout = ({ children }) => {
         { path: '/mentor-allocation', label: 'Mentor Allocation', icon: Users },
         { path: '/student-list', label: 'Student List', icon: GraduationCap },
         { path: '/timetable', label: 'Time Table', icon: Calendar },
-        { label: 'Attendance', icon: UserCheck, action: openAttendance },
+        { path: '/attendance', label: 'Attendance', icon: UserCheck },
         { path: '/faculty', label: 'Faculty', icon: Contact },
         { path: '/profile', label: 'Profile', icon: User },
     ];
