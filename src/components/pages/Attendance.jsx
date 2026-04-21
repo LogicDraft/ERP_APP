@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, AlertTriangle, GraduationCap, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, GraduationCap, Calendar, Clock, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { mockClassroom } from '../../data/mockData';
 
 const ATTENDANCE_STORAGE_KEY = 'self_attendance_records_v2';
+const ATTENDANCE_TARGET = 85;
 
 const Attendance = () => {
     const navigate = useNavigate();
@@ -151,17 +152,18 @@ const Attendance = () => {
         if (percentage >= 85) {
             // How many can they bunk?
             // (attended) / (total + x) = 0.85 => x = (attended / 0.85) - total
-            const canBunk = Math.floor((data.attended / 0.85) - data.total);
+            const canBunk = Math.floor((data.attended / (ATTENDANCE_TARGET / 100)) - data.total);
             if (canBunk > 0) {
-                return { text: `You can bunk ${canBunk} more class${canBunk > 1 ? 'es' : ''} and stay above 85%`, type: 'safe', percentage };
+                return { text: `You can bunk ${canBunk} more class${canBunk > 1 ? 'es' : ''} and stay above ${ATTENDANCE_TARGET}%`, type: 'safe', percentage };
             } else {
-                return { text: "You're just safe at 85%. Don't miss the next class", type: 'warning', percentage };
+                return { text: `You're just safe at ${ATTENDANCE_TARGET}%. Don't miss the next class`, type: 'warning', percentage };
             }
         } else {
             // How many do they need to attend?
-            // (attended + x) / (total + x) = 0.85 => x = (0.85 * total - attended) / 0.15
-            const needed = Math.ceil((0.85 * data.total - data.attended) / 0.15);
-            return { text: `Attend the next ${needed} class${needed > 1 ? 'es' : ''} to reach 85%`, type: 'danger', percentage };
+            // (attended + x) / (total + x) = target => x = (target * total - attended) / (1 - target)
+            const targetRatio = ATTENDANCE_TARGET / 100;
+            const needed = Math.ceil((targetRatio * data.total - data.attended) / (1 - targetRatio));
+            return { text: `Attend the next ${needed} class${needed > 1 ? 'es' : ''} to reach ${ATTENDANCE_TARGET}%`, type: 'danger', percentage };
         }
     };
 
@@ -213,175 +215,182 @@ const Attendance = () => {
         return parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
     };
 
+    const getRingStyle = (percentage) => {
+        const radius = 18;
+        const circumference = 2 * Math.PI * radius;
+        const progress = Math.max(0, Math.min(100, percentage));
+        const dashOffset = circumference - (progress / 100) * circumference;
+
+        return {
+            radius,
+            circumference,
+            dashOffset,
+            progressColor: progress >= ATTENDANCE_TARGET ? '#a8bfff' : '#6f789b'
+        };
+    };
+
     return (
-        <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 -my-6 bg-[#0f1115] text-slate-100 p-4 sm:p-6 lg:p-8 animate-fadeIn font-sans">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Self Attendance</h1>
-                    <p className="text-slate-400 text-sm mt-1">Smart insights for all subjects</p>
+        <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 -my-6 bg-black text-slate-100 animate-fadeIn font-sans">
+            <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
+                <div className="flex items-start justify-between mb-6">
+                    <div>
+                        <h1 className="text-5xl font-extrabold tracking-tight text-slate-200">Self Attendance</h1>
+                        <p className="text-slate-400 text-sm mt-2">Smart attendance insights for all subjects</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="mt-1 shrink-0 w-20 h-20 rounded-full bg-[#a8bfff] text-[#0c2f69] flex items-center justify-center"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft className="w-8 h-8" />
+                    </button>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Left Column: Chart & Today's Actions */}
-                <div className="lg:col-span-2 flex flex-col gap-6">
-                    
-                    {/* Bar Chart Panel */}
-                    <div className="bg-[#1c1f26] rounded-3xl p-6 shadow-2xl border border-slate-800">
-                        <h2 className="text-lg font-bold text-white mb-6">Subject Performance</h2>
-                        <div className="flex gap-2 sm:gap-4 items-end h-48 overflow-x-auto pb-2 scrollbar-hide">
-                            {chartData.map((sub, idx) => (
-                                <div key={idx} className="flex flex-col items-center gap-2 flex-1 min-w-[3.5rem]">
-                                    <span className="text-xs font-bold text-slate-300">{sub.percentage}%</span>
-                                    <div className="w-full bg-[#2a2f3a] rounded-xl h-32 flex items-end overflow-hidden relative group">
-                                        <div 
-                                            className={`w-full rounded-xl transition-all duration-1000 ${
-                                                sub.percentage >= 85 ? 'bg-indigo-400' : 'bg-rose-400'
-                                            }`} 
-                                            style={{ height: `${sub.percentage}%` }}
-                                        ></div>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-slate-500 truncate w-full text-center tracking-wider">{sub.shortName}</span>
+                <div className="bg-[#171a23] rounded-[2rem] p-6 border border-slate-800 mb-6">
+                    <h2 className="text-5xl/none sm:text-3xl font-bold text-slate-200 mb-6">Subject Performance</h2>
+                    <div className="flex gap-4 items-end h-72 overflow-x-auto pb-2">
+                        {chartData.map((sub, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-2 min-w-[6rem] flex-1">
+                                <span className="text-5xl/none sm:text-4xl font-bold text-[#a8bfff]">{sub.percentage}%</span>
+                                <div className="w-full bg-[#2a2f3a] rounded-3xl h-48 flex items-end overflow-hidden">
+                                    <div
+                                        className="w-full rounded-3xl transition-all duration-700 bg-[#9fb3e5]"
+                                        style={{ height: `${Math.max(10, sub.percentage)}%` }}
+                                    ></div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Today's Classes Actions */}
-                    <div className="bg-[#1c1f26] rounded-3xl p-6 shadow-2xl border border-slate-800">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-indigo-400" />
-                                Today's Classes
-                            </h2>
-                            <span className="text-xs font-bold bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full capitalize">
-                                {todayStr}
-                            </span>
-                        </div>
-
-                        {todaysClasses.length > 0 ? (
-                            <div className="space-y-4">
-                                {todaysClasses.map((slot, idx) => {
-                                    const status = getStatusForTodaySlot(slot);
-                                    return (
-                                        <div key={idx} className="bg-[#2a2f3a] p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                            <div>
-                                                <div className="font-bold text-slate-200 text-sm">{slot.subject}</div>
-                                                <div className="flex items-center gap-2 text-xs text-slate-400 mt-1 font-medium">
-                                                    <Clock className="w-3.5 h-3.5" />
-                                                    {slot.time}
-                                                </div>
-                                            </div>
-                                            <div className="flex bg-[#1c1f26] rounded-xl p-1 w-full sm:w-auto shrink-0">
-                                                <button
-                                                    onClick={() => markAttendance(slot, 'present')}
-                                                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                                                        status === 'present' 
-                                                        ? 'bg-emerald-500/20 text-emerald-400 shadow-sm' 
-                                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                                                    }`}
-                                                >
-                                                    Present
-                                                </button>
-                                                <button
-                                                    onClick={() => markAttendance(slot, 'absent')}
-                                                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                                                        status === 'absent' 
-                                                        ? 'bg-rose-500/20 text-rose-400 shadow-sm' 
-                                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                                                    }`}
-                                                >
-                                                    Absent
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                <span className="text-xl sm:text-sm font-medium text-slate-400 truncate w-full text-center">{sub.shortName}</span>
                             </div>
-                        ) : (
-                            <div className="text-center py-8 text-slate-500 text-sm font-medium">
-                                No classes scheduled for today. Enjoy!
-                            </div>
-                        )}
+                        ))}
                     </div>
                 </div>
 
-                {/* Right Column: Detailed Insight Cards */}
-                <div className="lg:col-span-1 space-y-4">
-                    <div className="bg-[#1c1f26] rounded-3xl p-5 shadow-lg border border-slate-800">
-                        <h2 className="text-sm font-bold text-white mb-3 px-1">Recent Attendance</h2>
-                        {recentAttendanceHistory.length > 0 ? (
-                            <div className="space-y-2">
-                                {recentAttendanceHistory.map((entry, idx) => (
-                                    <div key={`${entry.date}_${entry.time}_${entry.subject}_${idx}`} className="bg-[#2a2f3a] rounded-xl px-3 py-2">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-semibold text-slate-200 truncate">{entry.subject}</p>
-                                                <p className="text-[11px] text-slate-400">
-                                                    {formatHistoryDate(entry.date)} | {entry.time}
-                                                </p>
-                                            </div>
-                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                                                entry.status === 'present'
-                                                    ? 'bg-emerald-500/20 text-emerald-300'
-                                                    : 'bg-rose-500/20 text-rose-300'
-                                            }`}>
-                                                {entry.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-xs text-slate-500 px-1">No attendance logs yet.</p>
-                        )}
-                    </div>
-
-                    <h2 className="text-lg font-bold text-white mb-2 px-2">All Subjects</h2>
-                    
+                <div className="space-y-4 mb-6">
                     {uniqueSubjects.map((sub, idx) => {
                         const insight = getInsight(sub);
+                        const ring = getRingStyle(insight.percentage);
+
                         return (
-                            <div key={idx} className="bg-[#1c1f26] rounded-3xl p-5 shadow-lg border border-slate-800 flex flex-col gap-3 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                                    <GraduationCap className="w-16 h-16" />
-                                </div>
-                                
-                                <div className="flex justify-between items-start">
-                                    <div className="pr-12">
-                                        <h3 className="font-bold text-slate-200 text-sm leading-tight">{sub.name}</h3>
-                                        <div className="text-[10px] text-slate-500 font-mono mt-1">{sub.code}</div>
+                            <div key={idx} className="bg-[#171a23] rounded-3xl px-5 py-4 border border-slate-800">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="min-w-0">
+                                        <h3 className="text-2xl sm:text-xl font-bold text-slate-200 truncate">{sub.name}</h3>
+                                        <p className="text-slate-500 text-sm mt-1">Code: {sub.code}</p>
+                                        <p className="text-[#a8bfff] text-sm mt-1 flex items-center gap-2">
+                                            <Clock className="w-4 h-4" />
+                                            {getNextClass(sub.name, sub.code)}
+                                        </p>
                                     </div>
-                                    <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-full border-4 border-[#2a2f3a] relative z-10">
-                                        <span className={`text-xs font-bold ${insight.percentage >= 85 ? 'text-indigo-400' : 'text-rose-400'}`}>
-                                            {insight.percentage}%
-                                        </span>
+
+                                    <div className="relative w-16 h-16 shrink-0">
+                                        <svg viewBox="0 0 44 44" className="w-16 h-16 -rotate-90">
+                                            <circle cx="22" cy="22" r={ring.radius} stroke="#30384a" strokeWidth="4" fill="none" />
+                                            <circle
+                                                cx="22"
+                                                cy="22"
+                                                r={ring.radius}
+                                                stroke={ring.progressColor}
+                                                strokeWidth="4"
+                                                fill="none"
+                                                strokeLinecap="round"
+                                                strokeDasharray={ring.circumference}
+                                                strokeDashoffset={ring.dashOffset}
+                                            />
+                                        </svg>
+                                        <span className="absolute inset-0 grid place-items-center text-sm font-bold text-[#b5c6ff]">{insight.percentage}%</span>
                                     </div>
-                                </div>
-                                
-                                <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    {getNextClass(sub.name, sub.code)}
-                                </div>
-                                
-                                <div className={`mt-2 p-3 rounded-xl flex items-start gap-3 ${
-                                    insight.type === 'safe' ? 'bg-emerald-500/10 text-emerald-300' :
-                                    insight.type === 'warning' ? 'bg-amber-500/10 text-amber-300' :
-                                    'bg-rose-500/10 text-rose-300'
-                                }`}>
-                                    {insight.type === 'safe' ? <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" /> :
-                                     insight.type === 'warning' ? <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" /> :
-                                     <GraduationCap className="w-4 h-4 mt-0.5 shrink-0" />}
-                                    <p className="text-xs font-medium leading-relaxed">{insight.text}</p>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
-                
+
+                <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-slate-200 flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-[#a8bfff]" />
+                            Today&apos;s Classes
+                        </h2>
+                        <span className="text-xs font-semibold bg-[#202839] text-[#a8bfff] px-3 py-1 rounded-full capitalize">{todayStr}</span>
+                    </div>
+
+                    {todaysClasses.length > 0 ? (
+                        <div className="space-y-3">
+                            {todaysClasses.map((slot, idx) => {
+                                const status = getStatusForTodaySlot(slot);
+                                return (
+                                    <div key={idx} className="bg-[#202431] rounded-2xl p-4">
+                                        <p className="font-semibold text-slate-200 text-sm">{slot.subject}</p>
+                                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                                            <Clock className="w-3.5 h-3.5" />
+                                            {slot.time}
+                                        </p>
+                                        <div className="mt-3 grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => markAttendance(slot, 'present')}
+                                                className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                                                    status === 'present'
+                                                        ? 'bg-emerald-500/20 text-emerald-300'
+                                                        : 'bg-[#171a23] text-slate-300 hover:bg-[#252c3f]'
+                                                }`}
+                                            >
+                                                Present
+                                            </button>
+                                            <button
+                                                onClick={() => markAttendance(slot, 'absent')}
+                                                className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                                                    status === 'absent'
+                                                        ? 'bg-rose-500/20 text-rose-300'
+                                                        : 'bg-[#171a23] text-slate-300 hover:bg-[#252c3f]'
+                                                }`}
+                                            >
+                                                Absent
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-slate-500">No classes scheduled for today.</p>
+                    )}
+                </div>
+
+                <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-4">
+                    <h2 className="text-base font-bold text-slate-200 mb-3">Recent Attendance</h2>
+                    {recentAttendanceHistory.length > 0 ? (
+                        <div className="space-y-2">
+                            {recentAttendanceHistory.map((entry, idx) => (
+                                <div key={`${entry.date}_${entry.time}_${entry.subject}_${idx}`} className="bg-[#202431] rounded-xl px-3 py-2 flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-slate-200 truncate">{entry.subject}</p>
+                                        <p className="text-[11px] text-slate-400">{formatHistoryDate(entry.date)} | {entry.time}</p>
+                                    </div>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                                        entry.status === 'present'
+                                            ? 'bg-emerald-500/20 text-emerald-300'
+                                            : 'bg-rose-500/20 text-rose-300'
+                                    }`}>
+                                        {entry.status}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-slate-500">No attendance logs yet.</p>
+                    )}
+                </div>
+
+                <div className="fixed left-4 right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-20 mx-auto max-w-2xl">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/timetable')}
+                        className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-2xl sm:text-xl font-bold flex items-center justify-center gap-3 shadow-lg"
+                    >
+                        <Plus className="w-8 h-8 sm:w-6 sm:h-6" />
+                        Add Subject
+                    </button>
+                </div>
             </div>
         </div>
     );
