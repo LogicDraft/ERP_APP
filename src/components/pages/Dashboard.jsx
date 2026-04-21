@@ -82,15 +82,15 @@ const Dashboard = () => {
                 }
 
                 if (hasCLab) {
-                    // 1:20 PM reminder for Programming in C (Lab)
-                    const at1_20pm = new Date();
-                    at1_20pm.setHours(13, 20, 0, 0);
+                    // 1:40 PM reminder for Programming in C (Lab)
+                    const at1_40pm = new Date();
+                    at1_40pm.setHours(13, 40, 0, 0);
                     notifList.push({
                         title: '💻 C Lab at 1:40 PM!',
-                        body: 'Programming in C (Lab) starts soon. Bring your laptop by 1:20 PM!',
+                        body: 'Programming in C (Lab) starts soon. Bring your laptop by 1:40 PM!',
                         id: 2002,
                         schedule: {
-                            at: at1_20pm.getTime() > Date.now() ? at1_20pm : new Date(Date.now() + 1500)
+                            at: at1_40pm.getTime() > Date.now() ? at1_40pm : new Date(Date.now() + 1500)
                         },
                         sound: null,
                         attachments: null,
@@ -139,8 +139,8 @@ const Dashboard = () => {
                 };
             }
 
-            // Override with lab reminder from 1:20 PM
-            if (hasCLab && (currentHour > 13 || (currentHour === 13 && currentMinute >= 20))) {
+            // Override with lab reminder from 1:40 PM
+            if (hasCLab && (currentHour > 13 || (currentHour === 13 && currentMinute >= 40))) {
                 notification = {
                     id: 2002,
                     title: '💻 C Lab Starting Soon!',
