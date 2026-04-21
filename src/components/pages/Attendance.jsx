@@ -1,20 +1,24 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, AlertTriangle, GraduationCap, Calendar, Clock, Plus } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Plus, Settings, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { mockClassroom } from '../../data/mockData';
 
 const ATTENDANCE_STORAGE_KEY = 'self_attendance_records_v2';
-const ATTENDANCE_TARGET = 85;
+const ATTENDANCE_TARGETS_KEY = 'self_attendance_targets_v1';
+const DEFAULT_TARGET = 85;
 
 const Attendance = () => {
     const navigate = useNavigate();
     const [attendanceRecords, setAttendanceRecords] = useState({});
-    
-    // 1. Process timetable data without changing timetable structure
+    const [subjectTargets, setSubjectTargets] = useState({});
+    const [selectedSubjectKey, setSelectedSubjectKey] = useState(null);
+    const [selectedMonth, setSelectedMonth] = useState(new Date());
+    const [isTargetSheetOpen, setIsTargetSheetOpen] = useState(false);
+
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     const today = new Date();
-    const todayIndex = today.getDay();
-    const todayStr = days[todayIndex];
+    const todayStr = days[today.getDay()];
     const todayDate = today.toISOString().split('T')[0];
     const { timetable } = mockClassroom;
 
@@ -51,57 +55,42 @@ const Attendance = () => {
                     key,
                     name: slot.subject,
                     code: slot.code || 'N/A',
-                    shortName: slot.subject.replace(/[^A-Z]/g, '').slice(0, 5) || (slot.code ? slot.code.slice(-4) : 'SUBJ'),
-                    slots: []
+                    shortName: slot.subject.replace(/[^A-Z]/g, '').slice(0, 5) || (slot.code ? slot.code.slice(-4) : 'SUBJ')
                 };
             }
-            grouped[key].slots.push(slot);
         });
 
         return Object.values(grouped);
     }, [trackableSlots]);
 
-    // 2. Auto-show today's subjects
-    const todaysClasses = useMemo(
-        () => (timetable[todayStr] || [])
-            .filter((slot) => !isBreak(slot.subject))
-            .map((slot) => ({ ...slot, day: todayStr, slotId: buildSlotId(slot, todayStr) })),
-        [timetable, todayStr]
+    const selectedSubject = useMemo(
+        () => uniqueSubjects.find((subject) => subject.key === selectedSubjectKey) || null,
+        [uniqueSubjects, selectedSubjectKey]
     );
 
-    // Helper to find next class for a subject + code
-    const getNextClass = (subjectName, subjectCode) => {
-        for (let i = 0; i < 7; i++) {
-            const checkDayIndex = (todayIndex + i) % 7;
-            const checkDayStr = days[checkDayIndex];
-            const classes = timetable[checkDayStr] || [];
-            const found = classes.find((c) => !isBreak(c.subject) && c.subject === subjectName && (c.code || 'N/A') === subjectCode);
-            
-            if (found) {
-                if (i === 0) return `Today at ${found.time.split('-')[0]}`;
-                if (i === 1) return `Tomorrow at ${found.time.split('-')[0]}`;
-                return `${checkDayStr.charAt(0).toUpperCase() + checkDayStr.slice(1).substring(0,2)} ${found.time.split('-')[0]}`;
-            }
-        }
-        return 'Not scheduled';
-    };
-
-    // 3. Load attendance records from local storage
     useEffect(() => {
-        const saved = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
-        if (saved) {
+        const savedRecords = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
+        if (savedRecords) {
             try {
-                setAttendanceRecords(JSON.parse(saved));
+                setAttendanceRecords(JSON.parse(savedRecords));
             } catch {
                 setAttendanceRecords({});
             }
         }
+
+        const savedTargets = localStorage.getItem(ATTENDANCE_TARGETS_KEY);
+        if (savedTargets) {
+            try {
+                setSubjectTargets(JSON.parse(savedTargets));
+            } catch {
+                setSubjectTargets({});
+            }
+        }
     }, []);
 
-    // 4. User attendance mapping and actions (present/absent) per subject, slot and date
     const markAttendance = (slot, status) => {
         const slotId = slot.slotId || buildSlotId(slot, slot.day || todayStr);
-        
+
         setAttendanceRecords((prev) => {
             const updated = {
                 ...prev,
@@ -116,13 +105,25 @@ const Attendance = () => {
                     }
                 }
             };
-            
+
             localStorage.setItem(ATTENDANCE_STORAGE_KEY, JSON.stringify(updated));
             return updated;
         });
     };
 
-    // Auto sync UI metrics from saved records
+    const setTargetForSubject = (subjectKey, target) => {
+        setSubjectTargets((prev) => {
+            const updated = {
+                ...prev,
+                [subjectKey]: target
+            };
+            localStorage.setItem(ATTENDANCE_TARGETS_KEY, JSON.stringify(updated));
+            return updated;
+        });
+    };
+
+    const getTargetForSubject = (subjectKey) => subjectTargets[subjectKey] || DEFAULT_TARGET;
+
     const statsBySubject = useMemo(() => {
         const stats = {};
 
@@ -142,243 +143,371 @@ const Attendance = () => {
         return stats;
     }, [attendanceRecords]);
 
-    // Calculate Insights
     const getInsight = (subject) => {
         const data = statsBySubject[subject.key] || { total: 0, attended: 0 };
-        if (data.total === 0) return { text: "No classes tracked yet", type: 'neutral', percentage: 100 };
-        
-        const percentage = Math.round((data.attended / data.total) * 100);
-        
-        if (percentage >= 85) {
-            // How many can they bunk?
-            // (attended) / (total + x) = 0.85 => x = (attended / 0.85) - total
-            const canBunk = Math.floor((data.attended / (ATTENDANCE_TARGET / 100)) - data.total);
-            if (canBunk > 0) {
-                return { text: `You can bunk ${canBunk} more class${canBunk > 1 ? 'es' : ''} and stay above ${ATTENDANCE_TARGET}%`, type: 'safe', percentage };
-            } else {
-                return { text: `You're just safe at ${ATTENDANCE_TARGET}%. Don't miss the next class`, type: 'warning', percentage };
-            }
-        } else {
-            // How many do they need to attend?
-            // (attended + x) / (total + x) = target => x = (target * total - attended) / (1 - target)
-            const targetRatio = ATTENDANCE_TARGET / 100;
-            const needed = Math.ceil((targetRatio * data.total - data.attended) / (1 - targetRatio));
-            return { text: `Attend the next ${needed} class${needed > 1 ? 'es' : ''} to reach ${ATTENDANCE_TARGET}%`, type: 'danger', percentage };
+        const target = getTargetForSubject(subject.key);
+
+        if (data.total === 0) {
+            return { text: 'No classes tracked yet', percentage: 100, target };
         }
-    };
 
-    // Prepare chart data
-    const chartData = uniqueSubjects.map((sub) => {
-        const insight = getInsight(sub);
+        const percentage = Math.round((data.attended / data.total) * 100);
+        const targetRatio = target / 100;
+
+        if (percentage >= target) {
+            const canBunk = Math.floor((data.attended / targetRatio) - data.total);
+            if (canBunk > 0) {
+                return {
+                    text: `You can bunk ${canBunk} more class${canBunk > 1 ? 'es' : ''} and stay above ${target}%`,
+                    percentage,
+                    target
+                };
+            }
+            return {
+                text: `You're just safe at ${target}%. Don't miss the next class`,
+                percentage,
+                target
+            };
+        }
+
+        const needed = Math.ceil((targetRatio * data.total - data.attended) / (1 - targetRatio));
         return {
-            ...sub,
-            percentage: insight.percentage
+            text: `Attend the next ${needed} class${needed > 1 ? 'es' : ''} to reach ${target}%`,
+            percentage,
+            target
         };
-    });
-
-    const getStatusForTodaySlot = (slot) => {
-        const slotId = slot.slotId || buildSlotId(slot, todayStr);
-        return attendanceRecords[todayDate]?.[slotId]?.status;
     };
 
-    const recentAttendanceHistory = useMemo(() => {
-        const records = [];
+    const chartData = uniqueSubjects.map((subject) => ({
+        ...subject,
+        percentage: getInsight(subject).percentage
+    }));
 
+    const getNextClass = (subjectName, subjectCode) => {
+        const todayIndex = today.getDay();
+
+        for (let i = 0; i < 7; i++) {
+            const checkDayIndex = (todayIndex + i) % 7;
+            const checkDayStr = days[checkDayIndex];
+            const classes = timetable[checkDayStr] || [];
+            const found = classes.find((entry) => !isBreak(entry.subject) && entry.subject === subjectName && (entry.code || 'N/A') === subjectCode);
+
+            if (found) {
+                if (i === 0) return `Today at ${found.time.split('-')[0]}`;
+                if (i === 1) return `Tomorrow at ${found.time.split('-')[0]}`;
+                return `${checkDayStr.slice(0, 3)} ${found.time.split('-')[0]}`;
+            }
+        }
+
+        return 'Not scheduled';
+    };
+
+    const subjectEntries = useMemo(() => {
+        if (!selectedSubject) return [];
+
+        const entries = [];
         Object.entries(attendanceRecords).forEach(([date, dateRecord]) => {
             Object.values(dateRecord || {}).forEach((entry) => {
-                records.push({
-                    date,
-                    subject: entry.subject,
-                    code: entry.code,
-                    time: entry.time,
-                    day: entry.day,
-                    status: entry.status
-                });
+                const key = `${entry.subject}|${entry.code || 'N/A'}`;
+                if (key === selectedSubject.key) {
+                    entries.push({ ...entry, date });
+                }
             });
         });
 
-        records.sort((a, b) => {
-            if (a.date !== b.date) {
-                return b.date.localeCompare(a.date);
-            }
+        entries.sort((a, b) => {
+            if (a.date !== b.date) return b.date.localeCompare(a.date);
             return a.time.localeCompare(b.time);
         });
 
-        return records.slice(0, 8);
-    }, [attendanceRecords]);
+        return entries;
+    }, [attendanceRecords, selectedSubject]);
 
-    const formatHistoryDate = (date) => {
-        const parsed = new Date(`${date}T00:00:00`);
-        if (Number.isNaN(parsed.getTime())) {
-            return date;
+    const todaysSubjectSlots = useMemo(() => {
+        if (!selectedSubject) return [];
+
+        return (timetable[todayStr] || [])
+            .filter((slot) => !isBreak(slot.subject))
+            .filter((slot) => `${slot.subject}|${slot.code || 'N/A'}` === selectedSubject.key)
+            .map((slot) => ({ ...slot, day: todayStr, slotId: buildSlotId(slot, todayStr) }));
+    }, [selectedSubject, timetable, todayStr]);
+
+    const getStatusForTodaySlot = (slot) => attendanceRecords[todayDate]?.[slot.slotId]?.status;
+
+    const monthCalendar = useMemo(() => {
+        if (!selectedSubject) return { weeks: [], title: '' };
+
+        const firstDay = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+        const totalDays = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0).getDate();
+        const firstWeekdayMondayIndex = (firstDay.getDay() + 6) % 7;
+
+        const statusByDay = {};
+        subjectEntries.forEach((entry) => {
+            const entryDate = new Date(`${entry.date}T00:00:00`);
+            if (
+                entryDate.getFullYear() === selectedMonth.getFullYear() &&
+                entryDate.getMonth() === selectedMonth.getMonth()
+            ) {
+                const day = entryDate.getDate();
+                const prev = statusByDay[day];
+                if (!prev || prev === 'present') {
+                    statusByDay[day] = entry.status;
+                }
+            }
+        });
+
+        const cells = [];
+        for (let i = 0; i < firstWeekdayMondayIndex; i++) {
+            cells.push(null);
         }
-        return parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    };
+        for (let day = 1; day <= totalDays; day++) {
+            cells.push({ day, status: statusByDay[day] });
+        }
+        while (cells.length % 7 !== 0) {
+            cells.push(null);
+        }
 
-    const getRingStyle = (percentage) => {
-        const radius = 18;
-        const circumference = 2 * Math.PI * radius;
-        const progress = Math.max(0, Math.min(100, percentage));
-        const dashOffset = circumference - (progress / 100) * circumference;
+        const weeks = [];
+        for (let i = 0; i < cells.length; i += 7) {
+            weeks.push(cells.slice(i, i + 7));
+        }
 
-        return {
-            radius,
-            circumference,
-            dashOffset,
-            progressColor: progress >= ATTENDANCE_TARGET ? '#a8bfff' : '#6f789b'
-        };
-    };
+        const title = firstDay.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+        return { weeks, title };
+    }, [selectedMonth, selectedSubject, subjectEntries]);
+
+    if (selectedSubject) {
+        const insight = getInsight(selectedSubject);
+        const targetValue = getTargetForSubject(selectedSubject.key);
+
+        return (
+            <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 -my-6 bg-black text-slate-100 animate-fadeIn font-sans">
+                <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
+                    <div className="flex items-center justify-between mb-6">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSelectedSubjectKey(null);
+                                setIsTargetSheetOpen(false);
+                            }}
+                            className="w-11 h-11 rounded-full flex items-center justify-center text-slate-300"
+                            aria-label="Back to overview"
+                        >
+                            <ArrowLeft className="w-7 h-7" />
+                        </button>
+                        <h1 className="text-2xl font-extrabold text-slate-200 truncate px-2">{selectedSubject.name}</h1>
+                        <button
+                            type="button"
+                            onClick={() => setIsTargetSheetOpen(true)}
+                            className="w-11 h-11 rounded-full flex items-center justify-center text-slate-300"
+                            aria-label="Open subject settings"
+                        >
+                            <Settings className="w-7 h-7" />
+                        </button>
+                    </div>
+
+                    <div className="mb-4">
+                        <h2 className="text-5xl sm:text-4xl font-light text-slate-200">{monthCalendar.title.replace(' ', ', ')}</h2>
+                    </div>
+
+                    <div className="h-px bg-slate-700 mb-5"></div>
+
+                    <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-6">
+                        <div className="grid grid-cols-7 gap-2 mb-3">
+                            {dayLabels.map((label) => (
+                                <div key={label} className="text-center text-[#d4a6d9] font-medium text-lg">
+                                    {label}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="space-y-2">
+                            {monthCalendar.weeks.map((week, weekIndex) => (
+                                <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-2">
+                                    {week.map((cell, dayIndex) => {
+                                        if (!cell) {
+                                            return <div key={`empty-${weekIndex}-${dayIndex}`} className="h-11"></div>;
+                                        }
+
+                                        const markerClass =
+                                            cell.status === 'present'
+                                                ? 'bg-[#a8bfff] text-[#0b3678]'
+                                                : cell.status === 'absent'
+                                                    ? 'bg-[#2f3342] text-slate-200'
+                                                    : 'text-slate-300';
+
+                                        return (
+                                            <div key={`day-${weekIndex}-${dayIndex}`} className="h-11 flex items-center justify-center">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${markerClass}`}>
+                                                    {cell.day}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 mb-6">
+                        <button type="button" className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-xl font-medium flex items-center justify-center gap-3">
+                            Attendance overview
+                            <ChevronRight className="w-7 h-7" />
+                        </button>
+                        <button type="button" className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-xl font-medium flex items-center justify-center gap-3">
+                            Monthly Attendance
+                            <ChevronRight className="w-7 h-7" />
+                        </button>
+                    </div>
+
+                    {todaysSubjectSlots.length > 0 && (
+                        <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-4">
+                            <h3 className="text-base font-bold text-slate-200 mb-3">Mark Today</h3>
+                            <div className="space-y-2">
+                                {todaysSubjectSlots.map((slot) => {
+                                    const status = getStatusForTodaySlot(slot);
+                                    return (
+                                        <div key={slot.slotId} className="bg-[#202431] rounded-xl p-3">
+                                            <p className="text-sm text-slate-200 font-semibold">{slot.time}</p>
+                                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => markAttendance(slot, 'present')}
+                                                    className={`px-3 py-2 rounded-lg text-xs font-bold ${
+                                                        status === 'present'
+                                                            ? 'bg-emerald-500/20 text-emerald-300'
+                                                            : 'bg-[#171a23] text-slate-300'
+                                                    }`}
+                                                >
+                                                    Present
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => markAttendance(slot, 'absent')}
+                                                    className={`px-3 py-2 rounded-lg text-xs font-bold ${
+                                                        status === 'absent'
+                                                            ? 'bg-rose-500/20 text-rose-300'
+                                                            : 'bg-[#171a23] text-slate-300'
+                                                    }`}
+                                                >
+                                                    Absent
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="bg-[#171a23] rounded-3xl p-6 border border-slate-800 flex items-start gap-3">
+                        <div className="w-9 h-9 mt-1 rounded-full bg-[#222739] text-[#a8bfff] flex items-center justify-center text-lg">!</div>
+                        <p className="text-2xl sm:text-xl text-slate-300 leading-relaxed">{insight.text}</p>
+                    </div>
+                </div>
+
+                {isTargetSheetOpen && (
+                    <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={() => setIsTargetSheetOpen(false)}>
+                        <div
+                            className="absolute left-0 right-0 bottom-0 bg-[#171a23] rounded-t-[2rem] border-t border-slate-700 px-6 pt-5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]"
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <div className="w-14 h-1.5 bg-slate-400 rounded-full mx-auto mb-5"></div>
+                            <h3 className="text-5xl sm:text-4xl font-bold text-slate-200 mb-3">Set Attendance Target</h3>
+                            <p className="text-slate-400 text-2xl sm:text-base mb-8">Choose the minimum attendance percentage you want to maintain for this subject.</p>
+
+                            <div className="text-center text-6xl sm:text-5xl font-extrabold text-[#a8bfff] mb-6">{targetValue}%</div>
+
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={targetValue}
+                                onChange={(event) => setTargetForSubject(selectedSubject.key, Number(event.target.value))}
+                                className="w-full accent-[#a8bfff] h-2"
+                            />
+
+                            <div className="flex justify-between text-slate-400 text-lg sm:text-sm mt-2 mb-7">
+                                <span>0%</span>
+                                <span>100%</span>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsTargetSheetOpen(false)}
+                                className="w-full h-20 rounded-full bg-[#a8bfff] text-[#0b3678] text-4xl sm:text-2xl font-bold"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 -my-6 bg-black text-slate-100 animate-fadeIn font-sans">
             <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
                 <div className="flex items-start justify-between mb-6">
                     <div>
-                        <h1 className="text-5xl font-extrabold tracking-tight text-slate-200">Self Attendance</h1>
-                        <p className="text-slate-400 text-sm mt-2">Smart attendance insights for all subjects</p>
+                        <h1 className="text-5xl sm:text-4xl font-extrabold tracking-tight text-slate-200">Self Attendance</h1>
                     </div>
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
-                        className="mt-1 shrink-0 w-20 h-20 rounded-full bg-[#a8bfff] text-[#0c2f69] flex items-center justify-center"
+                        className="mt-1 shrink-0 w-20 h-20 sm:w-14 sm:h-14 rounded-full bg-[#a8bfff] text-[#0c2f69] flex items-center justify-center"
                         aria-label="Go back"
                     >
-                        <ArrowLeft className="w-8 h-8" />
+                        <ArrowLeft className="w-8 h-8 sm:w-6 sm:h-6" />
                     </button>
                 </div>
 
                 <div className="bg-[#171a23] rounded-[2rem] p-6 border border-slate-800 mb-6">
-                    <h2 className="text-5xl/none sm:text-3xl font-bold text-slate-200 mb-6">Subject Performance</h2>
+                    <h2 className="text-5xl sm:text-3xl font-bold text-slate-200 mb-6">Subject Performance</h2>
                     <div className="flex gap-4 items-end h-72 overflow-x-auto pb-2">
-                        {chartData.map((sub, idx) => (
+                        {chartData.map((subject, idx) => (
                             <div key={idx} className="flex flex-col items-center gap-2 min-w-[6rem] flex-1">
-                                <span className="text-5xl/none sm:text-4xl font-bold text-[#a8bfff]">{sub.percentage}%</span>
+                                <span className="text-5xl sm:text-3xl font-bold text-[#a8bfff]">{subject.percentage}%</span>
                                 <div className="w-full bg-[#2a2f3a] rounded-3xl h-48 flex items-end overflow-hidden">
-                                    <div
-                                        className="w-full rounded-3xl transition-all duration-700 bg-[#9fb3e5]"
-                                        style={{ height: `${Math.max(10, sub.percentage)}%` }}
-                                    ></div>
+                                    <div className="w-full rounded-3xl transition-all duration-700 bg-[#9fb3e5]" style={{ height: `${Math.max(10, subject.percentage)}%` }}></div>
                                 </div>
-                                <span className="text-xl sm:text-sm font-medium text-slate-400 truncate w-full text-center">{sub.shortName}</span>
+                                <span className="text-xl sm:text-sm font-medium text-slate-400 truncate w-full text-center">{subject.shortName}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="space-y-4 mb-6">
-                    {uniqueSubjects.map((sub, idx) => {
-                        const insight = getInsight(sub);
-                        const ring = getRingStyle(insight.percentage);
-
+                <div className="space-y-3">
+                    {uniqueSubjects.map((subject) => {
+                        const insight = getInsight(subject);
                         return (
-                            <div key={idx} className="bg-[#171a23] rounded-3xl px-5 py-4 border border-slate-800">
+                            <button
+                                type="button"
+                                key={subject.key}
+                                onClick={() => {
+                                    setSelectedSubjectKey(subject.key);
+                                    setSelectedMonth(new Date());
+                                }}
+                                className="w-full text-left bg-[#171a23] rounded-3xl px-5 py-4 border border-slate-800"
+                            >
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="min-w-0">
-                                        <h3 className="text-2xl sm:text-xl font-bold text-slate-200 truncate">{sub.name}</h3>
-                                        <p className="text-slate-500 text-sm mt-1">Code: {sub.code}</p>
+                                        <h3 className="text-2xl sm:text-xl font-bold text-slate-200 truncate">{subject.name}</h3>
+                                        <p className="text-slate-500 text-sm mt-1">Code: {subject.code}</p>
                                         <p className="text-[#a8bfff] text-sm mt-1 flex items-center gap-2">
                                             <Clock className="w-4 h-4" />
-                                            {getNextClass(sub.name, sub.code)}
+                                            {getNextClass(subject.name, subject.code)}
                                         </p>
                                     </div>
-
-                                    <div className="relative w-16 h-16 shrink-0">
-                                        <svg viewBox="0 0 44 44" className="w-16 h-16 -rotate-90">
-                                            <circle cx="22" cy="22" r={ring.radius} stroke="#30384a" strokeWidth="4" fill="none" />
-                                            <circle
-                                                cx="22"
-                                                cy="22"
-                                                r={ring.radius}
-                                                stroke={ring.progressColor}
-                                                strokeWidth="4"
-                                                fill="none"
-                                                strokeLinecap="round"
-                                                strokeDasharray={ring.circumference}
-                                                strokeDashoffset={ring.dashOffset}
-                                            />
-                                        </svg>
-                                        <span className="absolute inset-0 grid place-items-center text-sm font-bold text-[#b5c6ff]">{insight.percentage}%</span>
+                                    <div className="w-14 h-14 rounded-full border-4 border-[#3b445a] text-[#a8bfff] flex items-center justify-center font-bold text-xl sm:text-sm shrink-0">
+                                        {insight.percentage}%
                                     </div>
                                 </div>
-                            </div>
+                            </button>
                         );
                     })}
-                </div>
-
-                <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-slate-200 flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-[#a8bfff]" />
-                            Today&apos;s Classes
-                        </h2>
-                        <span className="text-xs font-semibold bg-[#202839] text-[#a8bfff] px-3 py-1 rounded-full capitalize">{todayStr}</span>
-                    </div>
-
-                    {todaysClasses.length > 0 ? (
-                        <div className="space-y-3">
-                            {todaysClasses.map((slot, idx) => {
-                                const status = getStatusForTodaySlot(slot);
-                                return (
-                                    <div key={idx} className="bg-[#202431] rounded-2xl p-4">
-                                        <p className="font-semibold text-slate-200 text-sm">{slot.subject}</p>
-                                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
-                                            <Clock className="w-3.5 h-3.5" />
-                                            {slot.time}
-                                        </p>
-                                        <div className="mt-3 grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => markAttendance(slot, 'present')}
-                                                className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
-                                                    status === 'present'
-                                                        ? 'bg-emerald-500/20 text-emerald-300'
-                                                        : 'bg-[#171a23] text-slate-300 hover:bg-[#252c3f]'
-                                                }`}
-                                            >
-                                                Present
-                                            </button>
-                                            <button
-                                                onClick={() => markAttendance(slot, 'absent')}
-                                                className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
-                                                    status === 'absent'
-                                                        ? 'bg-rose-500/20 text-rose-300'
-                                                        : 'bg-[#171a23] text-slate-300 hover:bg-[#252c3f]'
-                                                }`}
-                                            >
-                                                Absent
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-slate-500">No classes scheduled for today.</p>
-                    )}
-                </div>
-
-                <div className="bg-[#171a23] rounded-3xl p-5 border border-slate-800 mb-4">
-                    <h2 className="text-base font-bold text-slate-200 mb-3">Recent Attendance</h2>
-                    {recentAttendanceHistory.length > 0 ? (
-                        <div className="space-y-2">
-                            {recentAttendanceHistory.map((entry, idx) => (
-                                <div key={`${entry.date}_${entry.time}_${entry.subject}_${idx}`} className="bg-[#202431] rounded-xl px-3 py-2 flex items-center justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-slate-200 truncate">{entry.subject}</p>
-                                        <p className="text-[11px] text-slate-400">{formatHistoryDate(entry.date)} | {entry.time}</p>
-                                    </div>
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                                        entry.status === 'present'
-                                            ? 'bg-emerald-500/20 text-emerald-300'
-                                            : 'bg-rose-500/20 text-rose-300'
-                                    }`}>
-                                        {entry.status}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-xs text-slate-500">No attendance logs yet.</p>
-                    )}
                 </div>
 
                 <div className="fixed left-4 right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-20 mx-auto max-w-2xl">
