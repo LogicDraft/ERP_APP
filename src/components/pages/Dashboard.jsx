@@ -187,14 +187,7 @@ const Dashboard = () => {
             color: 'bg-purple-500',
             gradient: 'from-purple-500 to-purple-600',
         },
-        {
-            title: 'Attendance',
-            description: 'Mark and view daily attendance',
-            icon: UserCheck,
-            path: '/attendance',
-            color: 'bg-rose-500',
-            gradient: 'from-rose-500 to-rose-600',
-        },
+
         {
             title: 'Faculty',
             description: 'Contact details of faculty members',
@@ -312,22 +305,34 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {cards.map((card) => {
                     const Icon = card.icon;
+                    const content = (
+                        <div className={`h-full relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br ${card.gradient} p-[1px]`}>
+                            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl rounded-2xl z-0"></div>
+                            <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 text-center">
+                                <div className={`mb-3 p-3 rounded-full ${card.color.replace('bg-', 'bg-opacity-10 text-')} group-hover:scale-110 transition-transform duration-300`}>
+                                    <Icon size={32} strokeWidth={1.5} className={card.color.replace('bg-', 'text-')} />
+                                </div>
+                                <h3 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                                    {card.title}
+                                </h3>
+                                <p className="text-xs text-slate-500 mt-1 font-medium line-clamp-2">
+                                    {card.description}
+                                </p>
+                            </div>
+                        </div>
+                    );
+
+                    if (card.action) {
+                        return (
+                            <button key={card.title} type="button" onClick={card.action} className="group text-left w-full">
+                                {content}
+                            </button>
+                        );
+                    }
+
                     return (
                         <Link key={card.path} to={card.path} className="group">
-                            <div className={`h-full relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br ${card.gradient} p-[1px]`}>
-                                <div className="absolute inset-0 bg-white/90 backdrop-blur-xl rounded-2xl z-0"></div>
-                                <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 text-center">
-                                    <div className={`mb-3 p-3 rounded-full ${card.color.replace('bg-', 'bg-opacity-10 text-')} group-hover:scale-110 transition-transform duration-300`}>
-                                        <Icon size={32} strokeWidth={1.5} className={card.color.replace('bg-', 'text-')} />
-                                    </div>
-                                    <h3 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
-                                        {card.title}
-                                    </h3>
-                                    <p className="text-xs text-slate-500 mt-1 font-medium line-clamp-2">
-                                        {card.description}
-                                    </p>
-                                </div>
-                            </div>
+                            {content}
                         </Link>
                     );
                 })}

@@ -7,7 +7,6 @@ import MentorAllocation from './components/pages/MentorAllocation';
 import StudentList from './components/pages/StudentList';
 import TimeTable from './components/pages/TimeTable';
 import Profile from './components/pages/Profile';
-import Attendance from './components/pages/Attendance';
 import Faculty from './components/pages/Faculty';
 
 import { App as CapacitorApp } from '@capacitor/app';
@@ -37,7 +36,7 @@ const ProtectedRoute = ({ children }) => {
     const handleBackButton = async () => {
       CapacitorApp.addListener('backButton', ({ canGoBack }) => {
         const currentPath = locationRef.current.pathname;
-        const rootPages = ['/mentor-allocation', '/student-list', '/timetable', '/attendance', '/faculty', '/profile'];
+        const rootPages = ['/mentor-allocation', '/student-list', '/timetable', '/faculty', '/profile'];
 
         if (currentPath === '/' || currentPath === '/login') {
           CapacitorApp.exitApp();
@@ -93,12 +92,6 @@ function App() {
       <Route path="/profile" element={
         <ProtectedRoute>
           <Profile />
-        </ProtectedRoute>
-      } />
-
-      <Route path="/attendance" element={
-        <ProtectedRoute>
-          <Attendance />
         </ProtectedRoute>
       } />
 

@@ -1,0 +1,9 @@
+package com.acharya.aiml.erp;
+
+import android.app.Application;
+
+import dagger.hilt.android.HiltAndroidApp;
+
+@HiltAndroidApp
+public class ErpApplication extends Application {
+}

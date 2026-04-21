@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Home, Users, Calendar, GraduationCap, UserCheck, Contact, User, Menu, X, ChevronRight } from 'lucide-react';
+import { openAttendance } from '../native/attendanceLauncher';
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -28,7 +29,7 @@ const Layout = ({ children }) => {
         { path: '/mentor-allocation', label: 'Mentor Allocation', icon: Users },
         { path: '/student-list', label: 'Student List', icon: GraduationCap },
         { path: '/timetable', label: 'Time Table', icon: Calendar },
-        { path: '/attendance', label: 'Attendance', icon: UserCheck },
+        { label: 'Attendance', icon: UserCheck, action: openAttendance },
         { path: '/faculty', label: 'Faculty', icon: Contact },
         { path: '/profile', label: 'Profile', icon: User },
     ];
@@ -59,18 +60,29 @@ const Layout = ({ children }) => {
                         <div className="hidden lg:flex items-center space-x-1 bg-slate-100/50 p-1.5 rounded-full border border-slate-200/50 backdrop-blur-sm">
                             {navItems.map((item) => {
                                 const Icon = item.icon;
-                                const isActive = location.pathname === item.path;
-                                return (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 ${isActive
-                                            ? 'bg-white text-indigo-600 shadow-md font-bold transform scale-105'
-                                            : 'text-slate-500 hover:text-slate-900 hover:bg-white/50 font-medium'
-                                            }`}
-                                    >
+                                const isActive = item.path && location.pathname === item.path;
+                                const className = `flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 ${isActive
+                                    ? 'bg-white text-indigo-600 shadow-md font-bold transform scale-105'
+                                    : 'text-slate-500 hover:text-slate-900 hover:bg-white/50 font-medium'
+                                    }`;
+                                const content = (
+                                    <>
                                         <Icon size={18} className={isActive ? 'stroke-[2.5px]' : 'stroke-[2px]'} />
                                         <span className="text-sm">{item.label}</span>
+                                    </>
+                                );
+
+                                if (item.action) {
+                                    return (
+                                        <button key={item.label} type="button" onClick={item.action} className={className}>
+                                            {content}
+                                        </button>
+                                    );
+                                }
+
+                                return (
+                                    <Link key={item.path} to={item.path} className={className}>
+                                        {content}
                                     </Link>
                                 );
                             })}
@@ -103,17 +115,13 @@ const Layout = ({ children }) => {
                         <div className="px-4 py-6 space-y-2 max-h-[80vh] overflow-y-auto">
                             {navItems.map((item) => {
                                 const Icon = item.icon;
-                                const isActive = location.pathname === item.path;
-                                return (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className={`flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${isActive
-                                            ? 'bg-indigo-50 text-indigo-600 font-bold border border-indigo-100'
-                                            : 'text-slate-600 hover:bg-slate-50 font-medium border border-transparent'
-                                            }`}
-                                    >
+                                const isActive = item.path && location.pathname === item.path;
+                                const className = `flex items-center justify-between w-full px-5 py-4 rounded-2xl transition-all ${isActive
+                                    ? 'bg-indigo-50 text-indigo-600 font-bold border border-indigo-100'
+                                    : 'text-slate-600 hover:bg-slate-50 font-medium border border-transparent'
+                                    }`;
+                                const content = (
+                                    <>
                                         <div className="flex items-center gap-4">
                                             <div className={`p-2 rounded-xl ${isActive ? 'bg-indigo-100' : 'bg-slate-100'}`}>
                                                 <Icon size={20} />
@@ -121,6 +129,33 @@ const Layout = ({ children }) => {
                                             <span>{item.label}</span>
                                         </div>
                                         {isActive && <ChevronRight size={18} />}
+                                    </>
+                                );
+
+                                if (item.action) {
+                                    return (
+                                        <button
+                                            key={item.label}
+                                            type="button"
+                                            onClick={() => {
+                                                setIsMobileMenuOpen(false);
+                                                item.action();
+                                            }}
+                                            className={className}
+                                        >
+                                            {content}
+                                        </button>
+                                    );
+                                }
+
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className={className}
+                                    >
+                                        {content}
                                     </Link>
                                 );
                             })}
