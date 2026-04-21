@@ -1,291 +1,388 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, Circle, Save, Users, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, GraduationCap, Calendar, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { mockClassroom } from '../../data/mockData';
-import { Card } from '../ui/Card';
+
+const ATTENDANCE_STORAGE_KEY = 'self_attendance_records_v2';
 
 const Attendance = () => {
-    const { timetable, students } = mockClassroom;
+    const navigate = useNavigate();
+    const [attendanceRecords, setAttendanceRecords] = useState({});
     
-    // Get current date details
-    const todayObj = new Date();
-    const dateKey = todayObj.toISOString().split('T')[0]; // YYYY-MM-DD
-    
+    // 1. Process timetable data without changing timetable structure
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const todayIndex = todayObj.getDay();
-    const today = days[todayIndex];
-    
-    // Filter out breaks to get actual classes
+    const today = new Date();
+    const todayIndex = today.getDay();
+    const todayStr = days[todayIndex];
+    const todayDate = today.toISOString().split('T')[0];
+    const { timetable } = mockClassroom;
+
     const isBreak = (subject) => {
         const upper = subject.toUpperCase();
         return upper.includes('BREAK') || upper.includes('LUNCH');
     };
-    
-    const todaysClasses = (timetable[today] || []).filter(cls => !isBreak(cls.subject));
 
-    const [selectedClassIdx, setSelectedClassIdx] = useState(0);
-    const [attendanceData, setAttendanceData] = useState({});
-    const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+    const buildSlotId = (slot, day) => `${day}|${slot.time}|${slot.code || slot.subject}|${slot.subject}`;
 
-    // Load attendance from localStorage on mount
+    const trackableSlots = useMemo(() => {
+        const slots = [];
+        Object.keys(timetable).forEach((day) => {
+            (timetable[day] || []).forEach((slot) => {
+                if (!isBreak(slot.subject)) {
+                    slots.push({
+                        ...slot,
+                        day,
+                        slotId: buildSlotId(slot, day)
+                    });
+                }
+            });
+        });
+        return slots;
+    }, [timetable]);
+
+    const uniqueSubjects = useMemo(() => {
+        const grouped = {};
+
+        trackableSlots.forEach((slot) => {
+            const key = `${slot.subject}|${slot.code || 'NO_CODE'}`;
+            if (!grouped[key]) {
+                grouped[key] = {
+                    key,
+                    name: slot.subject,
+                    code: slot.code || 'N/A',
+                    shortName: slot.subject.replace(/[^A-Z]/g, '').slice(0, 5) || (slot.code ? slot.code.slice(-4) : 'SUBJ'),
+                    slots: []
+                };
+            }
+            grouped[key].slots.push(slot);
+        });
+
+        return Object.values(grouped);
+    }, [trackableSlots]);
+
+    // 2. Auto-show today's subjects
+    const todaysClasses = useMemo(
+        () => (timetable[todayStr] || [])
+            .filter((slot) => !isBreak(slot.subject))
+            .map((slot) => ({ ...slot, day: todayStr, slotId: buildSlotId(slot, todayStr) })),
+        [timetable, todayStr]
+    );
+
+    // Helper to find next class for a subject + code
+    const getNextClass = (subjectName, subjectCode) => {
+        for (let i = 0; i < 7; i++) {
+            const checkDayIndex = (todayIndex + i) % 7;
+            const checkDayStr = days[checkDayIndex];
+            const classes = timetable[checkDayStr] || [];
+            const found = classes.find((c) => !isBreak(c.subject) && c.subject === subjectName && (c.code || 'N/A') === subjectCode);
+            
+            if (found) {
+                if (i === 0) return `Today at ${found.time.split('-')[0]}`;
+                if (i === 1) return `Tomorrow at ${found.time.split('-')[0]}`;
+                return `${checkDayStr.charAt(0).toUpperCase() + checkDayStr.slice(1).substring(0,2)} ${found.time.split('-')[0]}`;
+            }
+        }
+        return 'Not scheduled';
+    };
+
+    // 3. Load attendance records from local storage
     useEffect(() => {
-        const storedData = localStorage.getItem('erp_attendance_data');
-        if (storedData) {
+        const saved = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
+        if (saved) {
             try {
-                setAttendanceData(JSON.parse(storedData));
-            } catch (e) {
-                console.error("Failed to parse attendance data", e);
+                setAttendanceRecords(JSON.parse(saved));
+            } catch {
+                setAttendanceRecords({});
             }
         }
     }, []);
 
-    // Save attendance to localStorage
-    const saveToLocalStorage = (data) => {
-        localStorage.setItem('erp_attendance_data', JSON.stringify(data));
-        setAttendanceData(data);
-    };
-
-    const handleMarkAttendance = (studentId, status) => {
-        if (!todaysClasses.length) return;
+    // 4. User attendance mapping and actions (present/absent) per subject, slot and date
+    const markAttendance = (slot, status) => {
+        const slotId = slot.slotId || buildSlotId(slot, slot.day || todayStr);
         
-        const currentClass = todaysClasses[selectedClassIdx];
-        const classId = `${currentClass.code}_${currentClass.time}`; // Unique identifier for the class slot
-        
-        const newData = { ...attendanceData };
-        if (!newData[dateKey]) newData[dateKey] = {};
-        if (!newData[dateKey][classId]) newData[dateKey][classId] = {};
-        
-        newData[dateKey][classId][studentId] = status;
-        
-        saveToLocalStorage(newData);
-    };
-
-    const handleMarkAll = (status) => {
-        if (!todaysClasses.length) return;
-        
-        const currentClass = todaysClasses[selectedClassIdx];
-        const classId = `${currentClass.code}_${currentClass.time}`;
-        
-        const newData = { ...attendanceData };
-        if (!newData[dateKey]) newData[dateKey] = {};
-        if (!newData[dateKey][classId]) newData[dateKey][classId] = {};
-        
-        students.forEach(student => {
-            newData[dateKey][classId][student._id] = status;
+        setAttendanceRecords((prev) => {
+            const updated = {
+                ...prev,
+                [todayDate]: {
+                    ...(prev[todayDate] || {}),
+                    [slotId]: {
+                        status,
+                        subject: slot.subject,
+                        code: slot.code || 'N/A',
+                        time: slot.time,
+                        day: slot.day || todayStr
+                    }
+                }
+            };
+            
+            localStorage.setItem(ATTENDANCE_STORAGE_KEY, JSON.stringify(updated));
+            return updated;
         });
+    };
+
+    // Auto sync UI metrics from saved records
+    const statsBySubject = useMemo(() => {
+        const stats = {};
+
+        Object.values(attendanceRecords).forEach((dateRecord) => {
+            Object.values(dateRecord || {}).forEach((entry) => {
+                const subjectKey = `${entry.subject}|${entry.code || 'N/A'}`;
+                if (!stats[subjectKey]) {
+                    stats[subjectKey] = { total: 0, attended: 0 };
+                }
+                stats[subjectKey].total += 1;
+                if (entry.status === 'present') {
+                    stats[subjectKey].attended += 1;
+                }
+            });
+        });
+
+        return stats;
+    }, [attendanceRecords]);
+
+    // Calculate Insights
+    const getInsight = (subject) => {
+        const data = statsBySubject[subject.key] || { total: 0, attended: 0 };
+        if (data.total === 0) return { text: "No classes tracked yet", type: 'neutral', percentage: 100 };
         
-        saveToLocalStorage(newData);
+        const percentage = Math.round((data.attended / data.total) * 100);
+        
+        if (percentage >= 85) {
+            // How many can they bunk?
+            // (attended) / (total + x) = 0.85 => x = (attended / 0.85) - total
+            const canBunk = Math.floor((data.attended / 0.85) - data.total);
+            if (canBunk > 0) {
+                return { text: `You can bunk ${canBunk} more class${canBunk > 1 ? 'es' : ''} and stay above 85%`, type: 'safe', percentage };
+            } else {
+                return { text: "You're just safe at 85%. Don't miss the next class", type: 'warning', percentage };
+            }
+        } else {
+            // How many do they need to attend?
+            // (attended + x) / (total + x) = 0.85 => x = (0.85 * total - attended) / 0.15
+            const needed = Math.ceil((0.85 * data.total - data.attended) / 0.15);
+            return { text: `Attend the next ${needed} class${needed > 1 ? 'es' : ''} to reach 85%`, type: 'danger', percentage };
+        }
     };
 
-    const handleSaveAndNotify = () => {
-        setShowSaveSuccess(true);
-        setTimeout(() => setShowSaveSuccess(false), 3000);
+    // Prepare chart data
+    const chartData = uniqueSubjects.map((sub) => {
+        const insight = getInsight(sub);
+        return {
+            ...sub,
+            percentage: insight.percentage
+        };
+    });
+
+    const getStatusForTodaySlot = (slot) => {
+        const slotId = slot.slotId || buildSlotId(slot, todayStr);
+        return attendanceRecords[todayDate]?.[slotId]?.status;
     };
 
-    const currentClass = todaysClasses[selectedClassIdx];
-    const classId = currentClass ? `${currentClass.code}_${currentClass.time}` : null;
-    const currentAttendance = (attendanceData[dateKey] && classId && attendanceData[dateKey][classId]) || {};
+    const recentAttendanceHistory = useMemo(() => {
+        const records = [];
 
-    // Calculate stats
-    const presentCount = students.filter(s => currentAttendance[s._id] === 'present').length;
-    const absentCount = students.filter(s => currentAttendance[s._id] === 'absent').length;
-    const unmarkedCount = students.length - presentCount - absentCount;
+        Object.entries(attendanceRecords).forEach(([date, dateRecord]) => {
+            Object.values(dateRecord || {}).forEach((entry) => {
+                records.push({
+                    date,
+                    subject: entry.subject,
+                    code: entry.code,
+                    time: entry.time,
+                    day: entry.day,
+                    status: entry.status
+                });
+            });
+        });
+
+        records.sort((a, b) => {
+            if (a.date !== b.date) {
+                return b.date.localeCompare(a.date);
+            }
+            return a.time.localeCompare(b.time);
+        });
+
+        return records.slice(0, 8);
+    }, [attendanceRecords]);
+
+    const formatHistoryDate = (date) => {
+        const parsed = new Date(`${date}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) {
+            return date;
+        }
+        return parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    };
 
     return (
-        <div className="space-y-6 animate-fadeIn pb-24">
-            <div className="flex justify-between items-center">
+        <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 -my-6 bg-[#0f1115] text-slate-100 p-4 sm:p-6 lg:p-8 animate-fadeIn font-sans">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900">Attendance</h1>
-                    <p className="text-slate-500 font-medium mt-1 flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        {todayObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                    </p>
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Self Attendance</h1>
+                    <p className="text-slate-400 text-sm mt-1">Smart insights for all subjects</p>
                 </div>
             </div>
 
-            {todaysClasses.length === 0 ? (
-                <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-200">
-                    <div className="bg-slate-100 p-4 rounded-full mb-4">
-                        <Calendar className="w-12 h-12 text-slate-400" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-700">No Classes Today</h2>
-                    <p className="text-slate-500 mt-2 max-w-md">There are no valid classes scheduled for today. Take a break and enjoy your day!</p>
-                </Card>
-            ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {/* Sidebar / Top Nav for Classes */}
-                    <div className="lg:col-span-1 space-y-4">
-                        <h3 className="font-bold text-slate-700 uppercase tracking-wider text-xs ml-1">Today's Schedule</h3>
-                        <div className="flex lg:flex-col overflow-x-auto lg:overflow-visible gap-3 pb-2 lg:pb-0 hide-scrollbar">
-                            {todaysClasses.map((cls, idx) => {
-                                const isSelected = selectedClassIdx === idx;
-                                return (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setSelectedClassIdx(idx)}
-                                        className={`flex-shrink-0 lg:flex-shrink w-64 lg:w-full text-left p-4 rounded-2xl transition-all duration-300 border ${
-                                            isSelected 
-                                            ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200 border-transparent transform lg:translate-x-2' 
-                                            : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-100 shadow-sm'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Clock className={`w-4 h-4 ${isSelected ? 'text-indigo-200' : 'text-indigo-500'}`} />
-                                            <span className={`text-xs font-bold ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
-                                                {cls.time}
-                                            </span>
-                                        </div>
-                                        <h4 className="font-bold text-sm line-clamp-2 leading-tight">
-                                            {cls.subject}
-                                        </h4>
-                                        <p className={`text-xs mt-2 font-medium ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
-                                            {cls.code}
-                                        </p>
-                                    </button>
-                                );
-                            })}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Left Column: Chart & Today's Actions */}
+                <div className="lg:col-span-2 flex flex-col gap-6">
+                    
+                    {/* Bar Chart Panel */}
+                    <div className="bg-[#1c1f26] rounded-3xl p-6 shadow-2xl border border-slate-800">
+                        <h2 className="text-lg font-bold text-white mb-6">Subject Performance</h2>
+                        <div className="flex gap-2 sm:gap-4 items-end h-48 overflow-x-auto pb-2 scrollbar-hide">
+                            {chartData.map((sub, idx) => (
+                                <div key={idx} className="flex flex-col items-center gap-2 flex-1 min-w-[3.5rem]">
+                                    <span className="text-xs font-bold text-slate-300">{sub.percentage}%</span>
+                                    <div className="w-full bg-[#2a2f3a] rounded-xl h-32 flex items-end overflow-hidden relative group">
+                                        <div 
+                                            className={`w-full rounded-xl transition-all duration-1000 ${
+                                                sub.percentage >= 85 ? 'bg-indigo-400' : 'bg-rose-400'
+                                            }`} 
+                                            style={{ height: `${sub.percentage}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-500 truncate w-full text-center tracking-wider">{sub.shortName}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Main Attendance Area */}
-                    <div className="lg:col-span-3 space-y-6">
-                        {/* Class Header & Actions */}
-                        <Card className="p-6 bg-white border-slate-100 shadow-md rounded-2xl">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-800">{currentClass.subject}</h2>
-                                    <div className="flex items-center gap-3 mt-2 text-sm text-slate-500 font-medium">
-                                        <span className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md">
-                                            <Clock className="w-4 h-4 text-indigo-500" />
-                                            {currentClass.time}
-                                        </span>
-                                        <span className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md">
-                                            <Users className="w-4 h-4 text-emerald-500" />
-                                            {students.length} Students
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex gap-2 w-full md:w-auto">
-                                    <button 
-                                        onClick={() => handleMarkAll('present')}
-                                        className="flex-1 md:flex-none px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold rounded-xl text-sm transition-colors"
-                                    >
-                                        Mark All Present
-                                    </button>
-                                    <button 
-                                        onClick={() => handleMarkAll('absent')}
-                                        className="flex-1 md:flex-none px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-xl text-sm transition-colors"
-                                    >
-                                        Mark All Absent
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            {/* Summary Stats */}
-                            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-100">
-                                <div className="bg-emerald-50 rounded-xl p-3 flex flex-col items-center justify-center border border-emerald-100">
-                                    <span className="text-2xl font-black text-emerald-600">{presentCount}</span>
-                                    <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Present</span>
-                                </div>
-                                <div className="bg-rose-50 rounded-xl p-3 flex flex-col items-center justify-center border border-rose-100">
-                                    <span className="text-2xl font-black text-rose-600">{absentCount}</span>
-                                    <span className="text-xs font-bold text-rose-700 uppercase tracking-wide">Absent</span>
-                                </div>
-                                <div className="bg-slate-50 rounded-xl p-3 flex flex-col items-center justify-center border border-slate-200">
-                                    <span className="text-2xl font-black text-slate-600">{unmarkedCount}</span>
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Unmarked</span>
-                                </div>
-                            </div>
-                        </Card>
+                    {/* Today's Classes Actions */}
+                    <div className="bg-[#1c1f26] rounded-3xl p-6 shadow-2xl border border-slate-800">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-indigo-400" />
+                                Today's Classes
+                            </h2>
+                            <span className="text-xs font-bold bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full capitalize">
+                                {todayStr}
+                            </span>
+                        </div>
 
-                        {/* Student List */}
-                        <div className="space-y-3">
-                            {students.map((student) => {
-                                const status = currentAttendance[student._id] || 'unmarked';
-                                
-                                return (
-                                    <div key={student._id} className="bg-white rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 font-bold flex items-center justify-center flex-shrink-0">
-                                                {student.roll}
-                                            </div>
+                        {todaysClasses.length > 0 ? (
+                            <div className="space-y-4">
+                                {todaysClasses.map((slot, idx) => {
+                                    const status = getStatusForTodaySlot(slot);
+                                    return (
+                                        <div key={idx} className="bg-[#2a2f3a] p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                             <div>
-                                                <h4 className="font-bold text-slate-800 leading-tight">{student.name}</h4>
-                                                <div className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-2">
-                                                    <span className="uppercase">{student.usn}</span>
-                                                    <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                                    <span>{student.gender}</span>
+                                                <div className="font-bold text-slate-200 text-sm">{slot.subject}</div>
+                                                <div className="flex items-center gap-2 text-xs text-slate-400 mt-1 font-medium">
+                                                    <Clock className="w-3.5 h-3.5" />
+                                                    {slot.time}
                                                 </div>
                                             </div>
+                                            <div className="flex bg-[#1c1f26] rounded-xl p-1 w-full sm:w-auto shrink-0">
+                                                <button
+                                                    onClick={() => markAttendance(slot, 'present')}
+                                                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                        status === 'present' 
+                                                        ? 'bg-emerald-500/20 text-emerald-400 shadow-sm' 
+                                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                                    }`}
+                                                >
+                                                    Present
+                                                </button>
+                                                <button
+                                                    onClick={() => markAttendance(slot, 'absent')}
+                                                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                        status === 'absent' 
+                                                        ? 'bg-rose-500/20 text-rose-400 shadow-sm' 
+                                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                                    }`}
+                                                >
+                                                    Absent
+                                                </button>
+                                            </div>
                                         </div>
-                                        
-                                        <div className="flex items-center bg-slate-100/80 p-1 rounded-xl w-full sm:w-auto">
-                                            <button
-                                                onClick={() => handleMarkAttendance(student._id, 'present')}
-                                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                                                    status === 'present' 
-                                                    ? 'bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-200' 
-                                                    : 'text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50'
-                                                }`}
-                                            >
-                                                <CheckCircle className="w-4 h-4" />
-                                                Present
-                                            </button>
-                                            
-                                            <button
-                                                onClick={() => handleMarkAttendance(student._id, 'absent')}
-                                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                                                    status === 'absent' 
-                                                    ? 'bg-white text-rose-600 shadow-sm ring-1 ring-rose-200' 
-                                                    : 'text-slate-500 hover:text-rose-600 hover:bg-rose-50/50'
-                                                }`}
-                                            >
-                                                <XCircle className="w-4 h-4" />
-                                                Absent
-                                            </button>
-                                            
-                                            <button
-                                                onClick={() => handleMarkAttendance(student._id, 'unmarked')}
-                                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                                                    status === 'unmarked' 
-                                                    ? 'bg-white text-slate-700 shadow-sm ring-1 ring-slate-200' 
-                                                    : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200/50'
-                                                }`}
-                                            >
-                                                <Circle className="w-4 h-4" />
-                                                Clear
-                                            </button>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-slate-500 text-sm font-medium">
+                                No classes scheduled for today. Enjoy!
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Column: Detailed Insight Cards */}
+                <div className="lg:col-span-1 space-y-4">
+                    <div className="bg-[#1c1f26] rounded-3xl p-5 shadow-lg border border-slate-800">
+                        <h2 className="text-sm font-bold text-white mb-3 px-1">Recent Attendance</h2>
+                        {recentAttendanceHistory.length > 0 ? (
+                            <div className="space-y-2">
+                                {recentAttendanceHistory.map((entry, idx) => (
+                                    <div key={`${entry.date}_${entry.time}_${entry.subject}_${idx}`} className="bg-[#2a2f3a] rounded-xl px-3 py-2">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-semibold text-slate-200 truncate">{entry.subject}</p>
+                                                <p className="text-[11px] text-slate-400">
+                                                    {formatHistoryDate(entry.date)} | {entry.time}
+                                                </p>
+                                            </div>
+                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                                                entry.status === 'present'
+                                                    ? 'bg-emerald-500/20 text-emerald-300'
+                                                    : 'bg-rose-500/20 text-rose-300'
+                                            }`}>
+                                                {entry.status}
+                                            </span>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-slate-500 px-1">No attendance logs yet.</p>
+                        )}
                     </div>
-                </div>
-            )}
 
-            {/* Floating Action Button for saving locally or syncing */}
-            {todaysClasses.length > 0 && (
-                <div className="fixed bottom-6 right-6 z-40">
-                    <button 
-                        onClick={handleSaveAndNotify}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-full shadow-xl shadow-indigo-200 flex items-center gap-2 font-bold transition-transform hover:scale-105 active:scale-95"
-                    >
-                        <Save className="w-5 h-5" />
-                        Save Records
-                    </button>
+                    <h2 className="text-lg font-bold text-white mb-2 px-2">All Subjects</h2>
+                    
+                    {uniqueSubjects.map((sub, idx) => {
+                        const insight = getInsight(sub);
+                        return (
+                            <div key={idx} className="bg-[#1c1f26] rounded-3xl p-5 shadow-lg border border-slate-800 flex flex-col gap-3 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                                    <GraduationCap className="w-16 h-16" />
+                                </div>
+                                
+                                <div className="flex justify-between items-start">
+                                    <div className="pr-12">
+                                        <h3 className="font-bold text-slate-200 text-sm leading-tight">{sub.name}</h3>
+                                        <div className="text-[10px] text-slate-500 font-mono mt-1">{sub.code}</div>
+                                    </div>
+                                    <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-full border-4 border-[#2a2f3a] relative z-10">
+                                        <span className={`text-xs font-bold ${insight.percentage >= 85 ? 'text-indigo-400' : 'text-rose-400'}`}>
+                                            {insight.percentage}%
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    {getNextClass(sub.name, sub.code)}
+                                </div>
+                                
+                                <div className={`mt-2 p-3 rounded-xl flex items-start gap-3 ${
+                                    insight.type === 'safe' ? 'bg-emerald-500/10 text-emerald-300' :
+                                    insight.type === 'warning' ? 'bg-amber-500/10 text-amber-300' :
+                                    'bg-rose-500/10 text-rose-300'
+                                }`}>
+                                    {insight.type === 'safe' ? <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" /> :
+                                     insight.type === 'warning' ? <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" /> :
+                                     <GraduationCap className="w-4 h-4 mt-0.5 shrink-0" />}
+                                    <p className="text-xs font-medium leading-relaxed">{insight.text}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
-            )}
-
-            {/* Save Success Toast */}
-            {showSaveSuccess && (
-                <div className="fixed bottom-24 right-6 z-50 animate-slideUp">
-                    <div className="bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5" />
-                        <span className="font-bold text-sm">Attendance saved locally!</span>
-                    </div>
-                </div>
-            )}
+                
+            </div>
         </div>
     );
 };

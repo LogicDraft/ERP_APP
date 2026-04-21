@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Home, Users, Calendar, GraduationCap, UserCheck, Contact, User, Menu, X, ChevronRight } from 'lucide-react';
+// import removed
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -36,7 +37,7 @@ const Layout = ({ children }) => {
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
             {/* Navbar */}
-            <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || isMobileMenuOpen
+            <nav className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] transition-all duration-300 ${scrolled || isMobileMenuOpen
                     ? 'bg-white/80 backdrop-blur-md shadow-lg border-b border-slate-200/50'
                     : 'bg-transparent border-b border-transparent'
                 }`}>
@@ -110,7 +111,10 @@ const Layout = ({ children }) => {
 
                 {/* Mobile Dropdown Menu */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden absolute top-20 left-0 right-0 bg-white border-b border-slate-200 shadow-xl animate-slideDown">
+                    <div
+                        className="lg:hidden absolute left-0 right-0 bg-white border-b border-slate-200 shadow-xl animate-slideDown"
+                        style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px))' }}
+                    >
                         <div className="px-4 py-6 space-y-2 max-h-[80vh] overflow-y-auto">
                             {navItems.map((item) => {
                                 const Icon = item.icon;
@@ -176,7 +180,7 @@ const Layout = ({ children }) => {
             </nav>
 
             {/* Main Content Spacer for Fixed Navbar */}
-            <div className="h-24"></div>
+            <div style={{ height: 'calc(6rem + env(safe-area-inset-top, 0px))' }}></div>
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-[calc(100vh-6rem)]">

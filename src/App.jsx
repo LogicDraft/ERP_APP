@@ -37,7 +37,7 @@ const ProtectedRoute = ({ children }) => {
     const handleBackButton = async () => {
       CapacitorApp.addListener('backButton', ({ canGoBack }) => {
         const currentPath = locationRef.current.pathname;
-        const rootPages = ['/mentor-allocation', '/student-list', '/timetable', '/faculty', '/profile', '/attendance'];
+        const rootPages = ['/mentor-allocation', '/student-list', '/timetable', '/attendance', '/faculty', '/profile'];
 
         if (currentPath === '/' || currentPath === '/login') {
           CapacitorApp.exitApp();
