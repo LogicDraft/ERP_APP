@@ -11,6 +11,13 @@ import ReminderWidget from '../dashboard/ReminderWidget';
 const Dashboard = () => {
     const { institutionDetails, timetable } = mockClassroom;
     const [smartNotification, setSmartNotification] = useState(null);
+    const [userName, setUserName] = useState('');
+    const [userUsn, setUserUsn] = useState('');
+
+    useEffect(() => {
+        setUserName(localStorage.getItem('userName') || 'AIML Student');
+        setUserUsn(localStorage.getItem('userUsn') || '');
+    }, []);
 
     // Get today's day name (lowercase)
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -217,10 +224,11 @@ const Dashboard = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 animate-gradient">
-                        Welcome AIML ERP
+                        Welcome, {userName.split(' ')[0]}
                     </h1>
-                    <p className="text-slate-600 font-semibold mt-2 text-base">
-                        Second Semester BE • Section N
+                    <p className="text-slate-600 font-semibold mt-2 text-base flex items-center gap-2 flex-wrap">
+                        {userUsn && <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md font-bold text-sm tracking-wide">{userUsn}</span>}
+                        <span>Second Semester BE • Section N</span>
                     </p>
                 </div>
                 <div className="bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 flex items-center gap-2">
@@ -275,8 +283,8 @@ const Dashboard = () => {
                                         <div className="w-24 text-sm font-bold text-slate-500 border-r-2 border-slate-200 pr-4 mr-4 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-colors">
                                             {cls.time}
                                         </div>
-                                        <div className="flex-1">
-                                            <div className="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors break-words whitespace-normal">
                                                 {cls.subject}
                                             </div>
                                             {cls.requiresLaptop && (

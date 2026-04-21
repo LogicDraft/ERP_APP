@@ -5,7 +5,7 @@ import { mockClassroom } from '../../data/mockData';
 import ProfileCompletionModal from '../ProfileCompletionModal';
 
 const Login = () => {
-    const [last3Digits, setLast3Digits] = useState('');
+    const [loginId, setLoginId] = useState('');
     const [error, setError] = useState('');
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [currentStudent, setCurrentStudent] = useState(null);
@@ -22,12 +22,19 @@ const Login = () => {
         e.preventDefault();
         setError('');
 
-        // Find student by last 3 digits of AUID
-        const student = mockClassroom.students.find(s => s.auid.slice(-3) === last3Digits);
+        // Find student by exact match or last 3 digits of AUID or USN
+        const normalizedInput = loginId.trim().toUpperCase();
+        const student = mockClassroom.students.find(s => 
+            s.auid.toUpperCase() === normalizedInput || 
+            s.usn.toUpperCase() === normalizedInput ||
+            s.auid.slice(-3) === normalizedInput ||
+            s.usn.slice(-3) === normalizedInput
+        );
 
         if (student) {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userAuid', student.auid);
+            localStorage.setItem('userUsn', student.usn);
             localStorage.setItem('userName', student.name);
 
             // Check if profile is completed
@@ -41,7 +48,7 @@ const Login = () => {
                 navigate('/');
             }
         } else {
-            setError('No student found with these last 3 digits. Please try again.');
+            setError('No student found with this USN/AUID. Please try again.');
         }
     };
 
@@ -92,7 +99,7 @@ const Login = () => {
                         )}
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">
-                                Enter Last 3 Digits of AUID
+                                Enter USN or AUID (Full or Last 3 Digits)
                             </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -102,15 +109,13 @@ const Login = () => {
                                     type="text"
                                     required
                                     className="block w-full pl-11 pr-4 py-4 text-lg border-2 border-slate-100 rounded-xl focus:ring-0 focus:border-indigo-500 text-center font-bold tracking-widest text-slate-800 transition-all bg-slate-50 focus:bg-white"
-                                    placeholder="XXX"
-                                    maxLength="3"
-                                    pattern="[0-9]{3}"
-                                    value={last3Digits}
-                                    onChange={(e) => setLast3Digits(e.target.value)}
+                                    placeholder="e.g. 1AY25AI001 or 001"
+                                    value={loginId}
+                                    onChange={(e) => setLoginId(e.target.value)}
                                 />
                             </div>
                             <p className="mt-3 text-xs text-slate-400 text-center font-medium">
-                                Example: For AIT25BEAI<span className="text-indigo-600 font-bold">151</span>, enter 151
+                                Example: Enter full USN/AUID or just the last 3 digits
                             </p>
                         </div>
 

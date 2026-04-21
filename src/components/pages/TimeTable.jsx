@@ -68,7 +68,7 @@ const TimeTable = () => {
                                                     }`}>
                                                     {slot.time}
                                                 </div>
-                                                <div className={`text-sm font-bold ${isBreak(slot.subject)
+                                                <div className={`text-sm font-bold break-words whitespace-normal ${isBreak(slot.subject)
                                                     ? 'text-amber-900'
                                                     : isLaptopClass(slot)
                                                         ? 'text-purple-900'
@@ -94,8 +94,8 @@ const TimeTable = () => {
             {/* Desktop View (Table) */}
             <div className="hidden md:block">
                 <Card className="overflow-hidden border border-slate-100 shadow-xl rounded-2xl">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-100">
+                    <div className="overflow-x-hidden">
+                        <table className="w-full table-fixed divide-y divide-slate-100">
                             <thead className="bg-slate-50">
                                 <tr>
                                     <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-32 sticky left-0 bg-slate-50 z-10">Day</th>
@@ -137,7 +137,7 @@ const TimeTable = () => {
                                                                     <Laptop className="w-3.5 h-3.5 text-purple-600" />
                                                                 )}
                                                             </div>
-                                                            <span className={`font-semibold leading-tight ${isBreak(slot.subject) ? 'text-amber-900' : 'text-slate-800'
+                                                            <span className={`font-semibold leading-tight break-words whitespace-normal ${isBreak(slot.subject) ? 'text-amber-900' : 'text-slate-800'
                                                                 }`}>
                                                                 {slot.subject}
                                                             </span>

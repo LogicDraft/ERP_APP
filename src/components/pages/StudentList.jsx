@@ -13,7 +13,8 @@ const StudentList = () => {
     const filteredStudents = students.filter(student => {
         const matchesSearch =
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.auid.toLowerCase().includes(searchTerm.toLowerCase());
+            student.auid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.usn.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesGender = genderFilter === 'All' || student.gender === genderFilter;
         return matchesSearch && matchesGender;
     });
@@ -27,7 +28,7 @@ const StudentList = () => {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                         <input
                             type="text"
-                            placeholder="Search by Name or AUID..."
+                            placeholder="Search by Name, USN or AUID..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 pr-4 py-2.5 w-full sm:w-64 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
@@ -57,6 +58,7 @@ const StudentList = () => {
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Roll No</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Student Name</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">AUID</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">USN</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Gender</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Mentor</th>
                             </tr>
@@ -72,6 +74,7 @@ const StudentList = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-400 group-hover:text-indigo-500 transition-colors">{student.roll}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">{student.name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-500">{student.auid}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">{student.usn}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                                             <span className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full ${student.gender === 'Female'
                                                 ? 'bg-pink-100 text-pink-700'
@@ -111,8 +114,12 @@ const StudentList = () => {
                         >
                             <div className="flex justify-between items-start mb-3">
                                 <div>
-                                    <h3 className="font-bold text-slate-800 text-lg">{student.name}</h3>
-                                    <p className="text-xs font-mono text-slate-500">{student.auid}</p>
+                                    <h3 className="font-bold text-slate-800 text-lg break-words whitespace-normal">{student.name}</h3>
+                                    <p className="text-xs font-mono text-slate-500 mt-1 flex items-center gap-2">
+                                        <span className="font-bold text-indigo-600">{student.usn}</span>
+                                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                                        <span>{student.auid}</span>
+                                    </p>
                                 </div>
                                 <span className={`px-3 py-1 text-xs font-bold rounded-full ${student.gender === 'Female'
                                     ? 'bg-pink-100 text-pink-600'

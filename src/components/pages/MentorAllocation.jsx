@@ -66,9 +66,10 @@ const MentorAllocation = () => {
                                 <table className="min-w-full divide-y divide-slate-100">
                                     <thead className="bg-slate-50">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Sl. No</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Sl.No</th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Student Name</th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">AUID</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">USN</th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Gender</th>
                                         </tr>
                                     </thead>
@@ -78,6 +79,7 @@ const MentorAllocation = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-400">{idx + 1}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">{student.name}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-500">{student.auid}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">{student.usn}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                     <span className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full ${student.gender === 'Female'
                                                         ? 'bg-pink-100 text-pink-700'

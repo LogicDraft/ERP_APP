@@ -100,7 +100,11 @@ const Profile = () => {
                     {/* Name and Basic Info */}
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-extrabold text-slate-900 mb-1">{student.name}</h2>
-                        <p className="text-slate-500 font-medium text-lg mb-4">{student.auid}</p>
+                        <div className="flex items-center justify-center gap-3 text-slate-500 font-medium text-lg mb-4">
+                            <span>USN: <span className="text-indigo-600 font-bold">{student.usn}</span></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                            <span>AUID: {student.auid}</span>
+                        </div>
 
                         <div className="flex flex-wrap justify-center gap-4 mb-6">
                             <div className="bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 flex items-center gap-2">
@@ -254,7 +258,7 @@ const Profile = () => {
                         <div className="space-y-4">
                             <div className="flex justify-between border-b border-slate-50 pb-2">
                                 <span className="text-slate-500">Department</span>
-                                <span className="font-medium text-slate-900 text-right">{institutionDetails.department}</span>
+                                <span className="font-medium text-slate-900 text-right break-words whitespace-normal max-w-[60%]">{institutionDetails.department}</span>
                             </div>
                             <div className="flex justify-between border-b border-slate-50 pb-2">
                                 <span className="text-slate-500">Semester</span>
@@ -263,6 +267,10 @@ const Profile = () => {
                             <div className="flex justify-between border-b border-slate-50 pb-2">
                                 <span className="text-slate-500">Section</span>
                                 <span className="font-medium text-slate-900">{institutionDetails.section}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-50 pb-2">
+                                <span className="text-slate-500">USN</span>
+                                <span className="font-bold text-indigo-600">{student.usn}</span>
                             </div>
                             <div className="flex justify-between border-b border-slate-50 pb-2">
                                 <span className="text-slate-500">Roll Number</span>
@@ -279,7 +287,7 @@ const Profile = () => {
                         <div className="space-y-4">
                             <div className="flex justify-between border-b border-slate-50 pb-2">
                                 <span className="text-slate-500">Mentor Name</span>
-                                <span className="font-medium text-slate-900 text-right">{student.mentor}</span>
+                                <span className="font-medium text-slate-900 text-right break-words whitespace-normal max-w-[60%]">{student.mentor}</span>
                             </div>
                             <div className="flex justify-between border-b border-slate-50 pb-2">
                                 <span className="text-slate-500">Cycle</span>
