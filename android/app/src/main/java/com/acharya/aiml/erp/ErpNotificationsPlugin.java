@@ -22,8 +22,12 @@ public class ErpNotificationsPlugin extends Plugin {
             reminders = new JSONArray();
         }
 
-        NotificationScheduler.configureSchedules(getContext(), attendanceSlots, reminders);
-        call.resolve();
+        try {
+            NotificationScheduler.configureSchedules(getContext(), attendanceSlots, reminders);
+            call.resolve();
+        } catch (Exception exception) {
+            call.reject("Failed to configure notifications", exception);
+        }
     }
 
     @PluginMethod

@@ -290,7 +290,7 @@ const Attendance = () => {
 
         return (
             <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 bg-black text-slate-100 animate-fadeIn font-sans">
-            <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pt-5 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))]">
+            <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
                         <div className="flex items-center justify-between mb-5">
                         <button
                             type="button"
@@ -456,7 +456,7 @@ const Attendance = () => {
 
     return (
         <div className="min-h-[calc(100vh-6rem)] -mx-4 sm:-mx-6 lg:-mx-8 bg-black text-slate-100 animate-fadeIn font-sans">
-            <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pt-5 pb-[calc(10rem+env(safe-area-inset-bottom,0px))]">
+            <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pt-5 pb-[calc(11rem+env(safe-area-inset-bottom,0px))]">
                 <div className="flex items-start justify-between mb-7">
                     <div>
                         <h1 className="text-[clamp(3.2rem,10vw,4.5rem)] leading-none font-extrabold tracking-tight text-slate-200">Self Attendance</h1>
