@@ -104,6 +104,7 @@ const Profile = () => {
                             <span>USN: <span className="text-indigo-600 font-bold">{student.usn}</span></span>
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                             <span>AUID: {student.auid}</span>
+                            <span>Email: {student.email}</span>
                         </div>
 
                         <div className="flex flex-wrap justify-center gap-4 mb-6">
