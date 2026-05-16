@@ -22,6 +22,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI129",
             "usn": "1AY25AI001",
             "name": "ABDUL NAAFIE ABDUL BARI",
+            "email": "abdula_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "1"
@@ -31,6 +32,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI133",
             "usn": "1AY25AI005",
             "name": "AKASH BV",
+            "email": "akashv_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "2"
@@ -40,8 +42,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI151",
             "usn": "1AY25AI011",
             "name": "ANANYAN R",
+            "email": "ananyanr_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "3"
         },
         {
@@ -49,6 +52,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI138",
             "usn": "1AY25AI020",
             "name": "BARATH U",
+            "email": "barathb_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "4"
@@ -58,8 +62,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI124",
             "usn": "1AY25AI026",
             "name": "BHUMIKA PS",
+            "email": "bhumikap_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "5"
         },
         {
@@ -67,8 +72,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI126",
             "usn": "1AY25AI029",
             "name": "CHINMAYI NATIKAR",
+            "email": "chinmayib_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "6"
         },
         {
@@ -76,8 +82,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI139",
             "usn": "1AY25AI033",
             "name": "DIVYASHREE B J",
+            "email": "divyashreej_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "7"
         },
         {
@@ -85,8 +92,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI136",
             "usn": "1AY25AI034",
             "name": "DIVYASHREE S",
+            "email": "divyashrees_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "8"
         },
         {
@@ -94,6 +102,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI154",
             "usn": "1AY25AI036",
             "name": "GANESH",
+            "email": "ganeshm_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "9"
@@ -103,6 +112,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI141",
             "usn": "1AY25AI037",
             "name": "GOWTHAM GOWDA C B",
+            "email": "gowthamb_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "10"
@@ -112,6 +122,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI118",
             "usn": "1AY25AI045",
             "name": "KALLURI SREE SIVA KESAVA S",
+            "email": "kallurik_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "11"
@@ -121,8 +132,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI153",
             "usn": "1AY25AI046",
             "name": "KAMALA",
+            "email": "kamalas_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "12"
         },
         {
@@ -130,6 +142,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI101",
             "usn": "1AY25AI048",
             "name": "KARTHIK GH",
+            "email": "karthikh_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "13"
@@ -139,6 +152,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI108",
             "usn": "1AY25AI053",
             "name": "KRUTHIK B T",
+            "email": "kruthikbt_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "14"
@@ -148,6 +162,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI088",
             "usn": "1AY25AI056",
             "name": "MANIKANTA M SHETTY",
+            "email": "manikantam_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "15"
@@ -157,6 +172,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI121",
             "usn": "1AY25AI058",
             "name": "MIMANSHU PANDEY",
+            "email": "mimanshu_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "16"
@@ -166,6 +182,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI142",
             "usn": "1AY25AI059",
             "name": "MITHUN DA",
+            "email": "mithuna_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "17"
@@ -175,6 +192,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI115",
             "usn": "1AY25AI061",
             "name": "MOHAMMED FAIZUDDIN",
+            "email": "mohammeda_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "18"
@@ -184,8 +202,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI081",
             "usn": "1AY25AI064",
             "name": "MYTHRI G",
+            "email": "mythrig_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "19"
         },
         {
@@ -193,8 +212,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI152",
             "usn": "1AY25AI066",
             "name": "NAVYASHREE V N",
+            "email": "navyashreev_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "20"
         },
         {
@@ -202,8 +222,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI074",
             "usn": "1AY25AI067",
             "name": "NEHA T",
+            "email": "nehat_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "21"
         },
         {
@@ -211,8 +232,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI103",
             "usn": "1AY25AI068",
             "name": "NETRA RAJEEVA CHAPPARAD",
+            "email": "netrar_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "22"
         },
         {
@@ -220,8 +242,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI120",
             "usn": "1AY25AI069",
             "name": "NIDHI",
+            "email": "nidhia_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "23"
         },
         {
@@ -229,8 +252,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI086",
             "usn": "1AY25AI071",
             "name": "NISARGAH S",
+            "email": "nisargas_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "24"
         },
         {
@@ -238,6 +262,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI090",
             "usn": "1AY25AI073",
             "name": "NISHEL BRAGANZA",
+            "email": "nishelf_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "25"
@@ -247,8 +272,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI080",
             "usn": "1AY25AI074",
             "name": "P DHARANI",
+            "email": "pdharani_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "26"
         },
         {
@@ -256,8 +282,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI087",
             "usn": "1AY25AI075",
             "name": "PAVANAGANGA C P",
+            "email": "pavangangap_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "27"
         },
         {
@@ -265,8 +292,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI082",
             "usn": "1AY25AI076",
             "name": "POOJA PATIL A B",
+            "email": "Poojak_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "28"
         },
         {
@@ -274,8 +302,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI135",
             "usn": "1AY25AI078",
             "name": "POORVI HP",
+            "email": "poorvip_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "29"
         },
         {
@@ -283,8 +312,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI112",
             "usn": "1AY25AI079",
             "name": "POORVIKA RAJASHEKAR",
+            "email": "poorvikar_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "30"
         },
         {
@@ -292,6 +322,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI072",
             "usn": "1AY25AI080",
             "name": "PRADEEP P",
+            "email": "pradeeppv25_beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "31"
@@ -301,6 +332,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI116",
             "usn": "1AY25AI081",
             "name": "PRASHANT RAVUTAPPA DEV",
+            "email": "prashantr_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "32"
@@ -310,8 +342,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI096",
             "usn": "1AY25AI083",
             "name": "PRATHIBHA P",
+            "email": "prathibhap_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "33"
         },
         {
@@ -319,8 +352,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI098",
             "usn": "1AY25AI084",
             "name": "PRATHVI GANESH NAIK",
+            "email": "prathvig_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "34"
         },
         {
@@ -328,6 +362,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI155",
             "usn": "1AY25AI086",
             "name": "PREETHAM SAGARA R",
+            "email": "preethamr_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "35"
@@ -337,6 +372,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI106",
             "usn": "1AY25AI088",
             "name": "R SRINIVASA GOWDA",
+            "email": "rvsrinivasa_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "36"
@@ -346,8 +382,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI077",
             "usn": "1AY25AI090",
             "name": "RAMYA S N",
+            "email": "ramyass_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "37"
         },
         {
@@ -355,8 +392,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI131",
             "usn": "1AY25AI091",
             "name": "RANJITA S",
+            "email": "ranjitas_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "38"
         },
         {
@@ -364,8 +402,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI079",
             "usn": "1AY25AI092",
             "name": "REKHA BASANGOUDA PATIL",
+            "email": "rekhab_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "39"
         },
         {
@@ -373,8 +412,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI125",
             "usn": "1AY25AI093",
             "name": "ROHANA RS",
+            "email": "rohanar_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "40"
         },
         {
@@ -382,6 +422,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI134",
             "usn": "1AY25AI094",
             "name": "ROHITH SJ",
+            "email": "rohithj_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "41"
@@ -391,8 +432,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI095",
             "usn": "1AY25AI096",
             "name": "SAISPOORTI",
+            "email": "saispoorti_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "42"
         },
         {
@@ -400,6 +442,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI123",
             "usn": "1AY25AI097",
             "name": "SAMAR SINGH",
+            "email": "samarm_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "43"
@@ -409,6 +452,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI092",
             "usn": "1AY25AI098",
             "name": "SAMPAT NINGAPPA PADASA",
+            "email": "samptn_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "44"
@@ -418,6 +462,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI119",
             "usn": "1AY25AI099",
             "name": "SATYAM",
+            "email": "satyamd_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "45"
@@ -427,6 +472,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI140",
             "usn": "1AY25AI100",
             "name": "SHARATH U",
+            "email": "sharathr_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "46"
@@ -436,6 +482,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI127",
             "usn": "1AY25AI101",
             "name": "SHASHANK CA",
+            "email": "shashankc_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "47"
@@ -445,6 +492,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI105",
             "usn": "1AY25AI102",
             "name": "SHREYAS S PATTANASHETTI",
+            "email": "shreyass_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "48"
@@ -454,8 +502,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI075",
             "usn": "1AY25AI104",
             "name": "SIRISHA KURUVADI KALYAN",
+            "email": "sirishakkk_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "49"
         },
         {
@@ -463,8 +512,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI156",
             "usn": "1AY25AI105",
             "name": "SNEHA GOVIND BOMMANAH",
+            "email": "snehag_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "50"
         },
         {
@@ -472,8 +522,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI093",
             "usn": "1AY25AI106",
             "name": "SOUMYA BIRADAR",
+            "email": "Soumyam_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "51"
         },
         {
@@ -481,8 +532,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI113",
             "usn": "1AY25AI109",
             "name": "SRILEKHA K S",
+            "email": "Srilekhak_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "52"
         },
         {
@@ -490,6 +542,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI102",
             "usn": "1AY25AI112",
             "name": "SURAJ BAHUBALI ALAGUR",
+            "email": "surajb_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "53"
@@ -499,6 +552,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI132",
             "usn": "1AY25AI113",
             "name": "SUYOGRAJ R",
+            "email": "suyograjr_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "54"
@@ -508,6 +562,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI143",
             "usn": "1AY25AI114",
             "name": "SWAROOPTEZ SHENA",
+            "email": "swarooptezs_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "55"
@@ -517,6 +572,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI144",
             "usn": "1AY25AI116",
             "name": "THUSHAR D",
+            "email": "thushard_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "56"
@@ -526,6 +582,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI128",
             "usn": "1AY25AI117",
             "name": "UMANG RAJ",
+            "email": "umangn_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "57"
@@ -535,8 +592,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI085",
             "usn": "1AY25AI118",
             "name": "VARSHA R",
+            "email": "varshar_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "58"
         },
         {
@@ -544,8 +602,9 @@ export const mockClassroom = {
             "auid": "AIT25BEAI114",
             "usn": "1AY25AI119",
             "name": "VARSHITHA SL",
+            "email": "varshithas_25beai@acharya.ac.in",
             "gender": "Female",
-            "mentor": "",
+            "mentor": "*",
             "roll": "59"
         },
         {
@@ -553,6 +612,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI130",
             "usn": "1AY25AI120",
             "name": "VENKATA DHARANI",
+            "email": "venkatas_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "60"
@@ -562,6 +622,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI078",
             "usn": "1AY25AI121",
             "name": "VENKATESH RATHOD",
+            "email": "Venkateshns_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "61"
@@ -571,6 +632,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI100",
             "usn": "1AY25AI122",
             "name": "VIJAY KUMAR T",
+            "email": "vijayt_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "62"
@@ -580,6 +642,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI137",
             "usn": "1AY25AI123",
             "name": "VIKAS P",
+            "email": "vikasp_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "63"
@@ -589,6 +652,7 @@ export const mockClassroom = {
             "auid": "AIT25BEAI122",
             "usn": "1AY25AI125",
             "name": "VISHAL RAJ",
+            "email": "vishalr_25beai@acharya.ac.in",
             "gender": "Male",
             "mentor": "Dr. Riyaz UR Rehman A",
             "roll": "64"
