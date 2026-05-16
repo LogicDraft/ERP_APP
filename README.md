@@ -101,7 +101,7 @@ ERP_APP/
 
 ## 🎨 App Icon
 
-The app uses the official Acharya logo as its icon, configured for all Android screen densities.
+The app uses the Generated Acharya logo as its icon, configured for all Android screen densities.
 
 ---
 
@@ -117,4 +117,4 @@ This project is maintained for Acharya AIML students. For issues or suggestions,
 
 ---
 
-**Built with ❤️ for Acharya Institute**
+**Built with ❤️ for Students**
