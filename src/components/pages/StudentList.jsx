@@ -14,8 +14,7 @@ const StudentList = () => {
         const matchesSearch =
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.auid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.usn.toLowerCase().includes(searchTerm.toLowerCase())||
-            student.email.toLowerCase().includes(searchTerm.toLowerCase());
+            student.usn.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesGender = genderFilter === 'All' || student.gender === genderFilter;
         return matchesSearch && matchesGender;
     });
